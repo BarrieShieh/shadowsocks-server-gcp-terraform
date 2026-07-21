@@ -80,16 +80,6 @@ resource "google_compute_address" "vm_static_ip" {
 }
 
 # ==============================================================================
-# DATA SOURCES
-# ==============================================================================
-
-# Dynamically fetch the latest patched Debian 12 image from official Google Cloud mirrors
-data "google_compute_image" "debian_latest" {
-  family  = var.boot_disk_family
-  project = var.boot_disk_project
-}
-
-# ==============================================================================
 # 3. COMPUTE ENGINE INSTANCE
 # ==============================================================================
 
@@ -110,8 +100,7 @@ resource "google_compute_instance" "app_vm" {
 
   boot_disk {
     initialize_params {
-      # Reference the dynamic Debian image link
-      image = data.google_compute_image.debian_latest.self_link
+      image = "${var.boot_disk_project}/${var.boot_disk_family}"
       size  = var.boot_disk_size
       type  = var.boot_disk_type
     }
@@ -174,13 +163,6 @@ resource "google_compute_instance" "app_vm" {
 
     docker compose up -d
   EOF
-
-  # Safeguard to prevent unintended VM deletion when GCP releases new Debian sub-patches
-  lifecycle {
-    ignore_changes = [
-      boot_disk[0].initialize_params[0].image
-    ]
-  }
 }
 
 # ==============================================================================
