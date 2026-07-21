@@ -8,7 +8,6 @@ This project automates the deployment of a containerized Shadowsocks and V2Ray a
 
 - **GCP Infrastructure**: Highly configurable deployment (default: `e2-micro` in `us-west1-c`).
 - **OS Image**: Debian 12 Bookworm (`debian-cloud/debian-12`) — lightweight, stable, and memory-optimized for small VM instances.
-- **Dynamic Image Fetching**: Uses Terraform data sources to automatically pull the latest patched OS image on initial creation, paired with lifecycle rules (`ignore_changes`) to prevent unintended VM destruction during routine `terraform apply` operations.
 - **Dedicated VPC & Dynamic Firewall**:
   - Automatically provisions an isolated custom VPC network.
   - Dynamically builds TCP and UDP firewall rules from variable maps:
