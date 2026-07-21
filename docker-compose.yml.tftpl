@@ -1,0 +1,97 @@
+services:
+  ss-v2ray:
+    container_name: ss-v2ray
+    image: teddysun/shadowsocks-rust:${ss_version}
+    restart: always
+    configs:
+      - source: ss-v2ray-config
+        target: /etc/shadowsocks-rust/config.json
+  ss-v2ray-quic:
+    container_name: ss-v2ray-quic
+    image: teddysun/shadowsocks-rust:${ss_version}
+    restart: always
+    ports:
+      - 80:9000/tcp
+      - 80:9000/udp
+    configs:
+      - source: ss-v2ray-quic-config
+        target: /etc/shadowsocks-rust/config.json
+      - source: acme-crt
+        target: /fullchain.crt
+      - source: acme-key
+        target: /private.key
+  ss-v2ray-grpc:
+    container_name: ss-v2ray-grpc
+    image: teddysun/shadowsocks-rust:${ss_version}
+    restart: always
+    ports:
+      - 443:9000/tcp
+      - 443:9000/udp
+    configs:
+      - source: ss-v2ray-grpc-config
+        target: /etc/shadowsocks-rust/config.json
+      - source: acme-crt
+        target: /fullchain.crt
+      - source: acme-key
+        target: /private.key
+  ss-http:
+    container_name: ss-http
+    image: teddysun/shadowsocks-rust:${ss_version}
+    restart: always
+    configs:
+      - source: ss-http-config
+        target: /etc/shadowsocks-rust/config.json
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${tunnel_token}
+configs:
+  acme-crt:
+    content: ${jsonencode(acme_crt)}
+  acme-key:
+    content: ${jsonencode(acme_key)}
+  ss-v2ray-config:
+    content: |
+      {
+          "server":"0.0.0.0",
+          "server_port":9000,
+          "method":"${ss_encrypt_method}",
+          "password":"${ss_v2ray_password}",
+          "nameserver":"8.8.8.8",
+          "mode":"tcp_and_udp",
+          "plugin":"v2ray-plugin",
+          "plugin_opts":"server;path=/ray"
+      }
+  ss-v2ray-quic-config:
+    content: |
+      {
+          "server":"0.0.0.0",
+          "server_port":9000,
+          "method":"${ss_encrypt_method}",
+          "password":"${ss_v2ray_quic_password}",
+          "nameserver":"8.8.8.8",
+          "plugin":"v2ray-plugin",
+          "plugin_opts":"server;mode=quic;host=${ss_v2ray_quic_host};cert=/fullchain.crt;key=/private.key"
+      }
+  ss-v2ray-grpc-config:
+    content: |
+      {
+          "server":"0.0.0.0",
+          "server_port":9000,
+          "method":"${ss_encrypt_method}",
+          "password":"${ss_v2ray_grpc_password}",
+          "nameserver":"8.8.8.8",
+          "plugin":"v2ray-plugin",
+          "plugin_opts":"server;mode=grpc;tls;host=${ss_v2ray_grpc_host};cert=/fullchain.crt;key=/private.key"
+      }
+  ss-http-config:
+    content: |
+      {
+          "server":"0.0.0.0",
+          "server_port":9000,
+          "method":"${ss_encrypt_method}",
+          "password":"${ss_http_password}"
+      }

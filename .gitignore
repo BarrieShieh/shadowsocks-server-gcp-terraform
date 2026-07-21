@@ -1,0 +1,86 @@
+# ==============================================================================
+# 1. TERRAFORM
+# ==============================================================================
+# Local directory containing downloaded provider plugins and modules
+.terraform/
+
+# Terraform dependency lock file
+# Note: Keep this file commented out to commit .terraform.lock.hcl to version control,
+# ensuring consistent provider versions across environments.
+.terraform.lock.hcl
+
+# Sensitive state files containing infrastructure attributes and secrets
+*.tfstate
+*.tfstate.*
+
+# CLI crash execution logs
+crash.log
+crash[0-9]*.log
+
+# Generated execution plan files
+*.tfplan
+
+# Sensitive variable files (passwords, API keys, tokens)
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# ==============================================================================
+# 2. PROJECT SECRETS & LOCAL CONFIGURATIONS
+# ==============================================================================
+# Local TLS/SSL private keys and ACME certificates
+keys/
+
+# Sensitive configuration outputs and generated credentials (e.g., passwords.json)
+configs/
+
+# ==============================================================================
+# 3. EDITORS & IDES
+# ==============================================================================
+# JetBrains / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Build artifacts & cache directories
+out/
+target/
+.gradle/
+.mvn/
+
+# ==============================================================================
+# 4. OPERATING SYSTEM GENERATED FILES
+# ==============================================================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
+ehthumbs_vista.db
