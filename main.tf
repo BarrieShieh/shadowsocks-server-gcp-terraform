@@ -6,6 +6,10 @@ locals {
   # "path.module" refers to the root directory of this Terraform module.
   acme_key = file("${path.module}/keys/private.key")
   acme_crt = file("${path.module}/keys/fullchain.crt")
+  # Collect all TCP ports defined across var.firewall_rules, flatten the lists, and remove duplicates
+  aggregated_tcp_ports = distinct(flatten([
+    for rule_key, rule_val in var.firewall_rules : rule_val.tcp_ports
+  ]))
 }
 
 # ==============================================================================
@@ -16,6 +20,26 @@ locals {
 resource "google_compute_network" "app_vpc" {
   name                    = "${var.instance_name}-vpc"
   auto_create_subnetworks = var.auto_create_subnetworks
+}
+
+# Query official Google Cloud IP blocks for load balancer health probes
+data "google_netblock_ip_ranges" "health_checkers" {
+  range_type = "health-checkers"
+}
+
+resource "google_compute_firewall" "lb_health_check" {
+  name    = "${var.instance_name}-lb-health-check"
+  network = google_compute_network.app_vpc.name
+
+  # Dynamically assign the aggregated TCP ports
+  allow {
+    protocol = "tcp"
+    ports    = local.aggregated_tcp_ports
+  }
+
+  # Dynamically assign IPv4 CIDR blocks retrieved from the Google data source
+  source_ranges = data.google_netblock_ip_ranges.health_checkers.cidr_blocks_ipv4
+  target_tags   = ["lb-health-check"]
 }
 
 # Dynamically generate firewall rules based on the var.firewall_rules map.
@@ -75,9 +99,14 @@ resource "google_compute_instance" "app_vm" {
   zone                      = var.zone
   allow_stopping_for_update = true
 
-  tags = distinct(flatten([
-    for rule in var.firewall_rules : rule.target_tags
-  ]))
+  # Protect the instance from accidental deletion
+  deletion_protection = var.enable_deletion_protection
+
+  # Dynamically read target_tags directly from the health check firewall resource
+  tags = distinct(concat(
+    tolist(google_compute_firewall.lb_health_check.target_tags),
+    flatten([for rule in var.firewall_rules : rule.target_tags])
+  ))
 
   boot_disk {
     initialize_params {

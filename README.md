@@ -1,4 +1,4 @@
-# Shadowsocks deployment in Computer Engine for GCP
+# Shadowsocks deployment for Computer Engine in GCP
 
 This project automates the deployment of a containerized Shadowsocks and V2Ray application stack on Google Cloud Platform (GCP). It utilizes Terraform to provision an optimized virtual machine, configures dedicated VPC networking with static public IP addressing, dynamically applies multi-protocol firewall rules, and securely injects rendered Docker Compose configurations and local TLS certificates via instance metadata for zero-touch deployment.
 

@@ -53,7 +53,7 @@ variable "firewall_rules" {
     default = {
       tcp_ports   = ["80", "443"]
       udp_ports   = []
-      target_tags = ["http", "https"]
+      target_tags = ["http-server", "https-server"]
     }
     custom = {
       tcp_ports   = ["8080", "9000"]
@@ -82,6 +82,12 @@ variable "machine_type" {
   description = "The GCP machine type (CPU and RAM allocation) for the VM instance"
   type        = string
   default     = "e2-micro"
+}
+
+variable "enable_deletion_protection" {
+  description = "Enable or disable deletion protection to prevent accidental VM termination via Terraform or GCP API"
+  type        = bool
+  default     = true
 }
 
 # ==============================================================================
