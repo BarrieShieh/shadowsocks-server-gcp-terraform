@@ -1,10 +1,10 @@
 services:
-  ss-v2ray:
-    container_name: ss-v2ray
+  ss-v2ray-ws:
+    container_name: ss-v2ray-ws
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
     configs:
-      - source: ss-v2ray-config
+      - source: ss-v2ray-ws-config
         target: /etc/shadowsocks-rust/config.json
   ss-v2ray-quic:
     container_name: ss-v2ray-quic
@@ -53,7 +53,7 @@ configs:
     content: ${jsonencode(acme_crt)}
   acme-key:
     content: ${jsonencode(acme_key)}
-  ss-v2ray-config:
+  ss-v2ray-ws-config:
     content: |
       {
           "server":"0.0.0.0",
