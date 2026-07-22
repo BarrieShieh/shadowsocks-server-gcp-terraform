@@ -42,17 +42,17 @@ variable "allowed_source_ranges" {
   default     = ["0.0.0.0/0"]
 }
 
+# noinspection TfIncorrectVariableType
 variable "firewall_rules" {
   description = "Map of firewall rule definitions specifying allowed TCP/UDP ports and target network tags"
   type = map(object({
     tcp_ports   = list(string)
-    udp_ports   = list(string)
+    udp_ports   = optional(list(string), [])
     target_tags = list(string)
   }))
   default = {
     default = {
       tcp_ports   = ["80", "443"]
-      udp_ports   = []
       target_tags = ["http-server", "https-server"]
     }
     custom = {
@@ -62,7 +62,6 @@ variable "firewall_rules" {
     }
     ssh = {
       tcp_ports   = ["22"]
-      udp_ports   = []
       target_tags = ["ssh"]
     }
   }
@@ -142,9 +141,9 @@ variable "services" {
   # Validate that only allowed service keys are defined
   validation {
     condition = length(setsubtract(keys(var.services), [
-      "v2ray-ws", "v2ray-quic", "v2ray-grpc", "tls", "cloudflared"
+      "v2ray-ws", "v2ray-quic", "v2ray-grpc", "tls", "cloudflared", "caddy"
     ])) == 0
-    error_message = "Invalid service key specified. Allowed options: 'v2ray-ws', 'v2ray-quic', 'v2ray-grpc', 'tls', 'cloudflared'."
+    error_message = "Invalid service key specified. Allowed options: 'v2ray-ws', 'v2ray-quic', 'v2ray-grpc', 'tls', 'cloudflared', 'caddy'."
   }
 }
 

@@ -1,4 +1,22 @@
 services:
+%{ if try(services["caddy"].enabled, false) }
+  # Caddy service
+  caddy:
+    container_name: caddy
+    image: abiosoft/caddy:1.0.3
+    restart: always
+    # ports:
+    #   - "443:443"
+    #   - "443:443/udp"
+    configs:
+      - source: caddy-config
+        target: /etc/Caddyfile
+      - source: acme-crt
+        target: /caddy.crt
+      - source: acme-key
+        target: /caddy.key
+%{ endif }
+
 %{ if try(services["v2ray-ws"].enabled, false) }
   # Shadowsocks V2Ray WebSocket service
   v2ray-ws:
@@ -75,12 +93,28 @@ services:
 %{ endif }
 
 configs:
-%{ if try(services["v2ray-quic"].enabled, false) || try(services["v2ray-grpc"].enabled, false) }
+%{ if try(services["v2ray-quic"].enabled, false) || try(services["v2ray-grpc"].enabled, false) || try(services["caddy"].enabled, false) }
   # Shared SSL Certificate files for QUIC and gRPC endpoints
   acme-crt:
     content: ${jsonencode(acme_crt)}
   acme-key:
     content: ${jsonencode(acme_key)}
+%{ endif }
+
+%{ if try(services["caddy"].enabled, false) && try(services["v2ray-ws"].enabled, false) }
+  # Config for WebSocket mode
+  caddy-config:
+    content: |
+      *.bloody-moon.com:443 {
+        gzip
+        tls /caddy.crt /caddy.key
+        proxy / https://example.com/
+        proxy /ray v2ray-ws:${services["v2ray-ws"].server_port} {
+          websocket
+          header_upstream -Origin
+        }
+      }
+    }
 %{ endif }
 
 %{ if try(services["v2ray-ws"].enabled, false) }
