@@ -91,7 +91,7 @@ configs:
           "server":"0.0.0.0",
           "server_port":${services["v2ray-ws"].server_port},
           "method":"${services["v2ray-ws"].method}",
-          "password":"${v2ray_ws_password}",
+          "password":"${services["v2ray-ws"].password}",
           "nameserver":"8.8.8.8",
           "mode":"tcp_and_udp",
           "plugin":"v2ray-plugin",
@@ -107,7 +107,7 @@ configs:
           "server":"0.0.0.0",
           "server_port":${services["v2ray-quic"].server_port},
           "method":"${services["v2ray-quic"].method}",
-          "password":"${v2ray_quic_password}",
+          "password":"${services["v2ray-quic"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
           "plugin_opts":"server;mode=quic;host=${services["v2ray-quic"].host};cert=/fullchain.crt;key=/private.key"
@@ -122,7 +122,7 @@ configs:
           "server":"0.0.0.0",
           "server_port":${services["v2ray-grpc"].server_port},
           "method":"${services["v2ray-grpc"].method}",
-          "password":"${v2ray_grpc_password}",
+          "password":"${services["v2ray-grpc"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
           "plugin_opts":"server;mode=grpc;tls;host=${services["v2ray-grpc"].host};cert=/fullchain.crt;key=/private.key"
@@ -137,6 +137,6 @@ configs:
           "server":"0.0.0.0",
           "server_port":${services["tls"].server_port},
           "method":"${services["tls"].method}",
-          "password":"${tls_password}"
+          "password":"${services["tls"].password}"
       }
 %{ endif }

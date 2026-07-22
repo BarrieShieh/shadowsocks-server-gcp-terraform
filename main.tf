@@ -10,17 +10,13 @@ locals {
   aggregated_tcp_ports = distinct(flatten([
     for rule_key, rule_val in var.firewall_rules : rule_val.tcp_ports
   ]))
-  # Map each Shadowsocks service to its password key identifier
-  # Filter to keep only enabled Shadowsocks services
-  # Dynamically extract names of all enabled services (replaces old var.enabled_services)
-  enabled_services = [
-    for key, service in var.services : key if service.enabled
-  ]
-
-  # Active passwords map using exact service names as keys
+  services = {
+    for key, service in var.services : key => merge(service, {
+      password = try(random_id.ss_passwords[key].b64_std, "")
+    })
+  }
   active_passwords = {
-    for service in local.enabled_services :
-    service => random_id.ss_passwords[service].b64_std
+    for key, res in random_id.ss_passwords : key => res.b64_std
   }
 }
 
@@ -97,17 +93,8 @@ resource "google_compute_address" "vm_static_ip" {
 # Track rendered docker-compose content to trigger VM replacement on change
 resource "terraform_data" "compose_file" {
   input = templatefile("${path.module}/docker-compose.yml.tftpl", {
-    # Pass the consolidated services object (contains enabled flags, hostnames, and encryption methods)
-    services   = var.services
-    ss_version = var.ss_version
-
-    # Safely lookup passwords from active_passwords map
-    v2ray_ws_password   = lookup(local.active_passwords, "v2ray", "")
-    v2ray_quic_password = lookup(local.active_passwords, "v2ray_quic", "")
-    v2ray_grpc_password = lookup(local.active_passwords, "v2ray_grpc", "")
-    tls_password        = lookup(local.active_passwords, "tls", "")
-
-    # Cloudflare tunnel token and SSL certificates
+    services     = local.services
+    ss_version   = var.ss_version
     tunnel_token = var.tunnel_token
     acme_crt     = local.acme_crt
     acme_key     = local.acme_key
