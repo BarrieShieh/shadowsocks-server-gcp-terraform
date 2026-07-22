@@ -4,8 +4,8 @@
 locals {
   # Read local TLS/SSL certificate files into memory for Docker Compose rendering.
   # "path.module" refers to the root directory of this Terraform module.
-  acme_key = file("${path.module}/keys/private.key")
-  acme_crt = file("${path.module}/keys/fullchain.crt")
+  acme_crt = base64decode(var.acme_crt)
+  acme_key = base64decode(var.acme_key)
   # Collect all TCP ports defined across var.firewall_rules, flatten the lists, and remove duplicates
   aggregated_tcp_ports = distinct(flatten([
     for rule_key, rule_val in var.firewall_rules : rule_val.tcp_ports
@@ -93,11 +93,11 @@ resource "google_compute_address" "vm_static_ip" {
 # Track rendered docker-compose content to trigger VM replacement on change
 resource "terraform_data" "compose_file" {
   input = templatefile("${path.module}/docker-compose.yml.tftpl", {
-    services     = local.services
-    ss_version   = var.ss_version
-    tunnel_token = var.tunnel_token
-    acme_crt     = local.acme_crt
-    acme_key     = local.acme_key
+    services                = local.services
+    ss_version              = var.ss_version
+    cloudflare_tunnel_token = var.cloudflare_tunnel_token
+    acme_crt                = local.acme_crt
+    acme_key                = local.acme_key
   })
 }
 

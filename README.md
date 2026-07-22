@@ -23,15 +23,48 @@ This project automates the deployment of a containerized Shadowsocks and V2Ray a
 
 ---
 
+## Example tfvars
+```yaml
+project_id = "cloud-162606"
+services = {
+  tls = {
+    enabled     = true
+    method      = "2022-blake3-aes-256-gcm"
+    server_port = 80
+  }
+  v2ray-ws = {
+    enabled     = false
+    method      = "2022-blake3-aes-256-gcm"
+    server_port = 9000
+  }
+  v2ray-grpc = {
+    enabled     = true
+    host        = "<host>"
+    method      = "2022-blake3-aes-256-gcm"
+    server_port = 443
+  }
+  v2ray-quic = {
+    enabled     = false
+    host        = "<host>"
+    method      = "2022-blake3-aes-256-gcm"
+    server_port = 443
+  }
+  cloudflared = {
+    enabled = false
+  }
+}
+acme_crt                = "<base64(fullchain.crt)>"
+acme_key                = "<base64(private.key)>"
+cloudflare_tunnel_token = "<cloudflare_tunnel_token>"
+
+```
+
 ## 📂 Project Structure
 
 ```text
 ├── configs/
 │   ├── passwords.json          # Auto-generated sensitive credentials (ignored by Git)
 │   └── production.tfvars       # Environment-specific variable definitions
-├── keys/
-│   ├── private.key             # Local SSL/TLS private key
-│   └── fullchain.crt           # Local SSL/TLS fullchain certificate
 ├── docker-compose.yml.tftpl    # Docker Compose Terraform template
 ├── main.tf                     # Compute Engine, VPC, Firewall, and Data Sources
 ├── variables.tf                # Input variables with strict typing and descriptions

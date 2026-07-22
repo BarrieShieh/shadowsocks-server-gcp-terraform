@@ -151,8 +151,19 @@ variable "services" {
 # ==============================================================================
 # 6. SENSITIVE CREDENTIALS & SECRETS
 # ==============================================================================
+variable "acme_crt" {
+  description = "Base64 encoded SSL certificate (fullchain.crt)"
+  type        = string
+  sensitive   = true
+}
 
-variable "tunnel_token" {
+variable "acme_key" {
+  description = "Base64 encoded SSL private key (private.key)"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_tunnel_token" {
   description = "Cloudflare Tunnel authentication token used to establish secure edge connections"
   type        = string
   sensitive   = true # Prevents the token from being printed in Terraform logs and console output
