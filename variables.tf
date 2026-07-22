@@ -238,7 +238,6 @@ variable "default_firewall_rules" {
       description       = "Allow Google Cloud health checks over IPv6"
       direction         = "INGRESS"
       target_tags       = ["lb-health-check"]
-      # Dynamically fetch IPv6 CIDR blocks for Google health checkers
       source_ranges = [
         "2600:1901:8001::/48",
         "2600:2d00:1:b029::/64"
