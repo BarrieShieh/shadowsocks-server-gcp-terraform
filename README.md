@@ -24,7 +24,7 @@ This project automates the deployment of a containerized Shadowsocks and V2Ray a
 ---
 
 ## Example tfvars
-```yaml
+```hcl
 project_id = "cloud-162606"
 services = {
   tls = {
@@ -55,14 +55,38 @@ services = {
 }
 firewall_rules = {
   v2ray-quic = {
-    tcp_ports   = ["8080"]
-    udp_ports   = ["8080"]
-    target_tags = ["v2ray-quic"]
+    name          = "v2ray-quic"
+    priority      = 1000
+    direction     = "INGRESS"
+    target_tags   = ["v2ray-quic"]
+    source_ranges = ["0.0.0.0/0"]
+    allow = [
+      {
+        protocol = "tcp"
+        ports    = ["8080"]
+      },
+      {
+        protocol = "udp"
+        ports    = ["8080"]
+      }
+    ]
   }
   v2ray-ws = {
-    tcp_ports   = ["9000"]
-    udp_ports   = ["9000"]
-    target_tags = ["v2ray-ws"]
+    name          = "v2ray-ws"
+    priority      = 1000
+    direction     = "INGRESS"
+    target_tags   = ["v2ray-ws"]
+    source_ranges = ["0.0.0.0/0"]
+    allow = [
+      {
+        protocol = "tcp"
+        ports    = ["9000"]
+      },
+      {
+        protocol = "udp"
+        ports    = ["9000"]
+      }
+    ]
   }
 }
 acme_crt                = "<base64(fullchain.crt)>"
