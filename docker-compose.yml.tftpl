@@ -5,9 +5,9 @@ services:
     container_name: caddy
     image: abiosoft/caddy:1.0.3
     restart: always
-    # ports:
-    #   - "443:443"
-    #   - "443:443/udp"
+    ports:
+      - ${services["caddy"].server_port}:${services["caddy"].server_port}/tcp
+      - ${services["caddy"].server_port}:${services["caddy"].server_port}/udp
     configs:
       - source: caddy-config
         target: /etc/Caddyfile
@@ -105,7 +105,7 @@ configs:
   # Config for WebSocket mode
   caddy-config:
     content: |
-      *.bloody-moon.com:443 {
+      *.bloody-moon.com:${services["caddy"].server_port} {
         gzip
         tls /caddy.crt /caddy.key
         proxy / https://example.com/
@@ -114,7 +114,6 @@ configs:
           header_upstream -Origin
         }
       }
-    }
 %{ endif }
 
 %{ if try(services["v2ray-ws"].enabled, false) }

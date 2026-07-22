@@ -4,11 +4,12 @@
 locals {
   # Read local TLS/SSL certificate files into memory for Docker Compose rendering.
   # "path.module" refers to the root directory of this Terraform module.
-  acme_crt = base64decode(var.acme_crt)
-  acme_key = base64decode(var.acme_key)
+  acme_crt       = base64decode(var.acme_crt)
+  acme_key       = base64decode(var.acme_key)
+  firewall_rules = merge(var.default_firewall_rules, var.firewall_rules)
   # Collect all TCP ports defined across var.firewall_rules, flatten the lists, and remove duplicates
   aggregated_tcp_ports = distinct(flatten([
-    for rule_key, rule_val in var.firewall_rules : rule_val.tcp_ports
+    for rule_key, rule_val in local.firewall_rules : rule_val.tcp_ports
   ]))
   services = {
     for key, service in var.services : key => merge(service, {
@@ -53,7 +54,7 @@ resource "google_compute_firewall" "lb_health_check" {
 # Dynamically generate firewall rules based on the var.firewall_rules map.
 # Supports both TCP and UDP protocols independently per rule block.
 resource "google_compute_firewall" "rules" {
-  for_each = var.firewall_rules
+  for_each = local.firewall_rules
 
   name    = "${var.instance_name}-allow-${each.key}"
   network = google_compute_network.app_vpc.name
@@ -113,7 +114,7 @@ resource "google_compute_instance" "app_vm" {
   # Dynamically read target_tags directly from the health check firewall resource
   tags = distinct(concat(
     tolist(google_compute_firewall.lb_health_check.target_tags),
-    flatten([for rule in var.firewall_rules : rule.target_tags])
+    flatten([for rule in local.firewall_rules : rule.target_tags])
   ))
 
   boot_disk {

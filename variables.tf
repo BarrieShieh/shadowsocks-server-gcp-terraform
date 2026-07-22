@@ -43,7 +43,7 @@ variable "allowed_source_ranges" {
 }
 
 # noinspection TfIncorrectVariableType
-variable "firewall_rules" {
+variable "default_firewall_rules" {
   description = "Map of firewall rule definitions specifying allowed TCP/UDP ports and target network tags"
   type = map(object({
     tcp_ports   = list(string)
@@ -55,16 +55,21 @@ variable "firewall_rules" {
       tcp_ports   = ["80", "443"]
       target_tags = ["http-server", "https-server"]
     }
-    custom = {
-      tcp_ports   = ["8080", "9000"]
-      udp_ports   = ["9000"]
-      target_tags = ["custom"]
-    }
     ssh = {
       tcp_ports   = ["22"]
       target_tags = ["ssh"]
     }
   }
+}
+
+variable "firewall_rules" {
+  description = "Map of firewall rule definitions specifying allowed TCP/UDP ports and target network tags"
+  type = map(object({
+    tcp_ports   = list(string)
+    udp_ports   = optional(list(string), [])
+    target_tags = list(string)
+  }))
+  default = {}
 }
 
 # ==============================================================================
@@ -165,5 +170,5 @@ variable "acme_key" {
 variable "cloudflare_tunnel_token" {
   description = "Cloudflare Tunnel authentication token used to establish secure edge connections"
   type        = string
-  sensitive   = true # Prevents the token from being printed in Terraform logs and console output
+  sensitive   = true
 }

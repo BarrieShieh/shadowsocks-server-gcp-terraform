@@ -53,6 +53,18 @@ services = {
     enabled = false
   }
 }
+firewall_rules = {
+  v2ray-quic = {
+    tcp_ports   = ["8080"]
+    udp_ports   = ["8080"]
+    target_tags = ["v2ray-quic"]
+  }
+  v2ray-ws = {
+    tcp_ports   = ["9000"]
+    udp_ports   = ["9000"]
+    target_tags = ["v2ray-ws"]
+  }
+}
 acme_crt                = "<base64(fullchain.crt)>"
 acme_key                = "<base64(private.key)>"
 cloudflare_tunnel_token = "<cloudflare_tunnel_token>"
