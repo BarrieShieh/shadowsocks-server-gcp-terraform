@@ -68,7 +68,6 @@ firewall_rules = {
 acme_crt                = "<base64(fullchain.crt)>"
 acme_key                = "<base64(private.key)>"
 cloudflare_tunnel_token = "<cloudflare_tunnel_token>"
-
 ```
 
 ## 📂 Project Structure
@@ -83,6 +82,7 @@ cloudflare_tunnel_token = "<cloudflare_tunnel_token>"
 ├── provider.tf                 # GCP Provider configuration
 └── README.md                   # Project documentation
 ---
+```
 
 ## 🚀 Quick Start & CLI Operations
 
@@ -112,3 +112,4 @@ gcloud compute ssh --zone=us-west1-c docker-compose-vm
 
 # View startup script execution logs
 sudo journalctl -u google-startup-scripts.service -f
+```
