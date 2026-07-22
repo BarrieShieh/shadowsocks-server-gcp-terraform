@@ -128,20 +128,24 @@ variable "ss_version" {
   default     = "1.24.0"
 }
 
-variable "ss_encrypt_method" {
-  description = "The AEAD cipher encryption method used by the Shadowsocks service"
-  type        = string
-  default     = "2022-blake3-aes-256-gcm"
-}
+variable "services" {
+  description = "Map of proxy services and their deployment configurations"
+  type = map(object({
+    enabled     = bool
+    host        = optional(string, "")
+    method      = optional(string, "2022-blake3-aes-256-gcm")
+    server_port = optional(number, 9000)
+  }))
 
-variable "ss_v2ray_quic_host" {
-  description = "The target domain name or Host header used for V2Ray QUIC transport obfuscation"
-  type        = string
-}
+  default = {}
 
-variable "ss_v2ray_grpc_host" {
-  description = "The target domain name or Host header used for V2Ray gRPC transport masking and routing"
-  type        = string
+  # Validate that only allowed service keys are defined
+  validation {
+    condition = length(setsubtract(keys(var.services), [
+      "v2ray-ws", "v2ray-quic", "v2ray-grpc", "tls", "cloudflared"
+    ])) == 0
+    error_message = "Invalid service key specified. Allowed options: 'v2ray-ws', 'v2ray-quic', 'v2ray-grpc', 'tls', 'cloudflared'."
+  }
 }
 
 # ==============================================================================

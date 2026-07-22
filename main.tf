@@ -10,6 +10,18 @@ locals {
   aggregated_tcp_ports = distinct(flatten([
     for rule_key, rule_val in var.firewall_rules : rule_val.tcp_ports
   ]))
+  # Map each Shadowsocks service to its password key identifier
+  # Filter to keep only enabled Shadowsocks services
+  # Dynamically extract names of all enabled services (replaces old var.enabled_services)
+  enabled_services = [
+    for key, service in var.services : key if service.enabled
+  ]
+
+  # Active passwords map using exact service names as keys
+  active_passwords = {
+    for service in local.enabled_services :
+    service => random_id.ss_passwords[service].b64_std
+  }
 }
 
 # ==============================================================================
@@ -82,6 +94,25 @@ resource "google_compute_address" "vm_static_ip" {
 # ==============================================================================
 # 3. COMPUTE ENGINE INSTANCE
 # ==============================================================================
+# Track rendered docker-compose content to trigger VM replacement on change
+resource "terraform_data" "compose_file" {
+  input = templatefile("${path.module}/docker-compose.yml.tftpl", {
+    # Pass the consolidated services object (contains enabled flags, hostnames, and encryption methods)
+    services   = var.services
+    ss_version = var.ss_version
+
+    # Safely lookup passwords from active_passwords map
+    v2ray_ws_password   = lookup(local.active_passwords, "v2ray", "")
+    v2ray_quic_password = lookup(local.active_passwords, "v2ray_quic", "")
+    v2ray_grpc_password = lookup(local.active_passwords, "v2ray_grpc", "")
+    tls_password        = lookup(local.active_passwords, "tls", "")
+
+    # Cloudflare tunnel token and SSL certificates
+    tunnel_token = var.tunnel_token
+    acme_crt     = local.acme_crt
+    acme_key     = local.acme_key
+  })
+}
 
 resource "google_compute_instance" "app_vm" {
   name                      = var.instance_name
@@ -115,19 +146,8 @@ resource "google_compute_instance" "app_vm" {
   }
 
   metadata = {
-    "compose-file-content" = templatefile("${path.module}/docker-compose.yml.tftpl", {
-      ss_version             = var.ss_version
-      ss_encrypt_method      = var.ss_encrypt_method
-      ss_v2ray_password      = random_id.ss_v2ray.b64_std
-      ss_v2ray_quic_password = random_id.ss_v2ray_quic.b64_std
-      ss_v2ray_quic_host     = var.ss_v2ray_quic_host
-      ss_v2ray_grpc_password = random_id.ss_v2ray_grpc.b64_std
-      ss_v2ray_grpc_host     = var.ss_v2ray_grpc_host
-      ss_http_password       = random_id.ss_http.b64_std
-      tunnel_token           = var.tunnel_token
-      acme_crt               = local.acme_crt
-      acme_key               = local.acme_key
-    })
+    # Reference the output of terraform_data resource
+    "compose-file-content" = terraform_data.compose_file.output
   }
 
   metadata_startup_script = <<-EOF
@@ -163,6 +183,12 @@ resource "google_compute_instance" "app_vm" {
 
     docker compose up -d
   EOF
+  # Force replacement (recreation) of the VM whenever metadata/compose content changes
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.compose_file
+    ]
+  }
 }
 
 # ==============================================================================
@@ -172,13 +198,11 @@ resource "google_compute_instance" "app_vm" {
 # Export generated random passwords to a local JSON file for administration purposes.
 # Permissions are restricted to '0600' (read/write for owner only) for security.
 resource "local_sensitive_file" "passwords_json" {
+  # Only create the file if there is at least one active password service
+  count = length(local.active_passwords) > 0 ? 1 : 0
+
   filename        = "${path.module}/configs/passwords.json"
   file_permission = "0600"
 
-  content = jsonencode({
-    v2ray      = random_id.ss_v2ray.b64_std
-    v2ray_quic = random_id.ss_v2ray_quic.b64_std
-    v2ray_grpc = random_id.ss_v2ray_grpc.b64_std
-    http       = random_id.ss_http.b64_std
-  })
+  content = jsonencode(local.active_passwords)
 }
