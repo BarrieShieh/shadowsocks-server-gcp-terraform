@@ -42,33 +42,265 @@ variable "allowed_source_ranges" {
   default     = ["0.0.0.0/0"]
 }
 
-# noinspection TfIncorrectVariableType
 variable "default_firewall_rules" {
-  description = "Map of firewall rule definitions specifying allowed TCP/UDP ports and target network tags"
+  description = "Map of GCP firewall rule definitions extracted from the GCP Console"
+
   type = map(object({
-    tcp_ports   = list(string)
-    udp_ports   = optional(list(string), [])
-    target_tags = list(string)
+    name               = string                      # Name of the firewall rule
+    enforcement_order  = optional(number, 1)         # Enforcement/Execution order
+    deployment_scope   = optional(string, "GLOBAL")  # Deployment scope
+    priority           = optional(number, 1000)      # Rule priority
+    description        = optional(string, null)      # Description of the rule
+    direction          = optional(string, "INGRESS") # Direction: INGRESS or EGRESS
+    target_tags        = optional(list(string), [])  # Target network tags
+    source_ranges      = optional(list(string), [])  # IPv4/IPv6 source ranges
+    destination_ranges = optional(list(string), [])  # IPv4/IPv6 destination ranges
+    action             = optional(string, "ALLOW")   # Action: ALLOW or DENY
+    allow = optional(list(object({                   # Protocol and ports configuration
+      protocol = string
+      ports    = optional(list(string), [])
+    })), [])
   }))
+
   default = {
-    default = {
-      tcp_ports   = ["80", "443"]
-      target_tags = ["http-server", "https-server"]
+    clout-network = {
+      name               = "clout-network"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = "Allow access to all TCP and UDP"
+      direction          = "INGRESS"
+      target_tags        = [] # Applied to all targets
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "all" # All protocols and ports
+          ports    = []
+        }
+      ]
     }
-    ssh = {
-      tcp_ports   = ["22"]
-      target_tags = ["ssh"]
+    cloud = {
+      name               = "cloud"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = null
+      direction          = "EGRESS"
+      target_tags        = [] # Applied to all targets
+      source_ranges      = []
+      destination_ranges = ["0.0.0.0/0"]
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "all"
+          ports    = []
+        }
+      ]
+    }
+    outline = {
+      name               = "outline"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = null
+      direction          = "INGRESS"
+      target_tags        = ["outline"]
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "all"
+          ports    = []
+        }
+      ]
+    }
+    default-allow-https = {
+      name               = "default-allow-https"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = null
+      direction          = "INGRESS"
+      target_tags        = ["https-server"]
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["443"]
+        }
+      ]
+    }
+    default-allow-http = {
+      name               = "default-allow-http"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = null
+      direction          = "INGRESS"
+      target_tags        = ["http-server"]
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["80"]
+        }
+      ]
+    }
+    default-allow-icmp = {
+      name               = "default-allow-icmp"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 65534
+      description        = "Allow ICMP from anywhere"
+      direction          = "INGRESS"
+      target_tags        = [] # Applied to all targets
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "icmp"
+          ports    = []
+        }
+      ]
+    }
+    default-allow-rdp = {
+      name               = "default-allow-rdp"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 65534
+      description        = "Allow RDP from anywhere"
+      direction          = "INGRESS"
+      target_tags        = [] # Applied to all targets
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["3389"]
+        }
+      ]
+    }
+    default-allow-ssh = {
+      name               = "default-allow-ssh"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 65534
+      description        = "Allow SSH from anywhere"
+      direction          = "INGRESS"
+      target_tags        = [] # Applied to all targets
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["22"]
+        }
+      ]
+    }
+    default-allow-health-check = {
+      name              = "default-allow-health-check"
+      enforcement_order = 1
+      deployment_scope  = "GLOBAL"
+      priority          = 1000
+      description       = "Allow Google Cloud health checks over IPv4"
+      direction         = "INGRESS"
+      target_tags       = ["lb-health-check"]
+      source_ranges = [
+        "35.191.0.0/16",
+        "130.211.0.0/22",
+        "209.85.152.0/22",
+        "209.85.204.0/22"
+      ]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = []
+        }
+      ]
+    }
+    default-allow-health-check-ipv6 = {
+      name              = "default-allow-health-check-ipv6"
+      enforcement_order = 1
+      deployment_scope  = "GLOBAL"
+      priority          = 1000
+      description       = "Allow Google Cloud health checks over IPv6"
+      direction         = "INGRESS"
+      target_tags       = ["lb-health-check"]
+      # Dynamically fetch IPv6 CIDR blocks for Google health checkers
+      source_ranges = [
+        "2600:1901:8001::/48",
+        "2600:2d00:1:b029::/64"
+      ]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = []
+        }
+      ]
+    }
+    default-allow-internal = {
+      name               = "default-allow-internal"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 65534
+      description        = "Allow internal traffic on the default network"
+      direction          = "INGRESS"
+      target_tags        = [] # Applied to all instances
+      source_ranges      = ["10.128.0.0/9"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["0-65535"]
+        },
+        {
+          protocol = "udp"
+          ports    = ["0-65535"]
+        },
+        {
+          protocol = "icmp"
+          ports    = []
+        }
+      ]
     }
   }
 }
 
 variable "firewall_rules" {
-  description = "Map of firewall rule definitions specifying allowed TCP/UDP ports and target network tags"
+  description = "Map of custom firewall rule definitions"
+
   type = map(object({
-    tcp_ports   = list(string)
-    udp_ports   = optional(list(string), [])
-    target_tags = list(string)
+    name               = optional(string)            # Optional: defaults to map key if omitted
+    enforcement_order  = optional(number, 1)         # Execution order
+    deployment_scope   = optional(string, "GLOBAL")  # Deployment scope
+    priority           = optional(number, 1000)      # Rule priority
+    description        = optional(string, null)      # Description
+    direction          = optional(string, "INGRESS") # Direction: INGRESS / EGRESS
+    target_tags        = optional(list(string), [])  # Target network tags
+    source_ranges      = optional(list(string), [])  # IPv4/IPv6 source ranges
+    destination_ranges = optional(list(string), [])  # IPv4/IPv6 destination ranges
+    action             = optional(string, "ALLOW")   # Action: ALLOW / DENY
+    allow = optional(list(object({                   # Dynamic allow protocols and ports
+      protocol = string
+      ports    = optional(list(string), [])
+    })), [])
   }))
+
   default = {}
 }
 

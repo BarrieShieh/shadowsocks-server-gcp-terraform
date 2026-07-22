@@ -4,13 +4,8 @@
 locals {
   # Read local TLS/SSL certificate files into memory for Docker Compose rendering.
   # "path.module" refers to the root directory of this Terraform module.
-  acme_crt       = base64decode(var.acme_crt)
-  acme_key       = base64decode(var.acme_key)
-  firewall_rules = merge(var.default_firewall_rules, var.firewall_rules)
-  # Collect all TCP ports defined across var.firewall_rules, flatten the lists, and remove duplicates
-  aggregated_tcp_ports = distinct(flatten([
-    for rule_key, rule_val in local.firewall_rules : rule_val.tcp_ports
-  ]))
+  acme_crt = base64decode(var.acme_crt)
+  acme_key = base64decode(var.acme_key)
   services = {
     for key, service in var.services : key => merge(service, {
       password = try(random_id.ss_passwords[key].b64_std, "")
@@ -19,6 +14,11 @@ locals {
   active_passwords = {
     for key, res in random_id.ss_passwords : key => res.b64_std
   }
+  # Merge dynamic rules with custom firewall rules from variable inputs
+  firewall_rules = merge(
+    var.default_firewall_rules,
+    var.firewall_rules
+  )
 }
 
 # ==============================================================================
@@ -36,49 +36,51 @@ data "google_netblock_ip_ranges" "health_checkers" {
   range_type = "health-checkers"
 }
 
-resource "google_compute_firewall" "lb_health_check" {
-  name    = "${var.instance_name}-lb-health-check"
-  network = google_compute_network.app_vpc.name
-
-  # Dynamically assign the aggregated TCP ports
-  allow {
-    protocol = "tcp"
-    ports    = local.aggregated_tcp_ports
-  }
-
-  # Dynamically assign IPv4 CIDR blocks retrieved from the Google data source
-  source_ranges = data.google_netblock_ip_ranges.health_checkers.cidr_blocks_ipv4
-  target_tags   = ["lb-health-check"]
-}
-
 # Dynamically generate firewall rules based on the var.firewall_rules map.
 # Supports both TCP and UDP protocols independently per rule block.
 resource "google_compute_firewall" "rules" {
   for_each = local.firewall_rules
 
-  name    = "${var.instance_name}-allow-${each.key}"
+  # Name of the firewall rule
+  # Note: You can use `each.value.name` directly or prefix it with `${var.instance_name}-${each.value.name}`
+  name    = "${var.instance_name}-${each.value.name}"
   network = google_compute_network.app_vpc.name
 
-  # Dynamically generate TCP allow rules only if tcp_ports is not empty
+  # Rule Priority (1 - 65535)
+  priority = each.value.priority
+
+  # Description of the firewall rule
+  description = each.value.description
+
+  # Direction of traffic: INGRESS or EGRESS
+  direction = each.value.direction
+
+  # Source IP ranges (Applicable for INGRESS rules)
+  source_ranges = each.value.direction == "INGRESS" && length(each.value.source_ranges) > 0 ? each.value.source_ranges : null
+
+  # Destination IP ranges (Applicable for EGRESS rules)
+  destination_ranges = each.value.direction == "EGRESS" && length(each.value.destination_ranges) > 0 ? each.value.destination_ranges : null
+
+  # Target network tags (Applies rule only to instances with matching tags)
+  target_tags = length(each.value.target_tags) > 0 ? each.value.target_tags : null
+
+  # Dynamically generate ALLOW protocol and port blocks
   dynamic "allow" {
-    for_each = length(each.value.tcp_ports) > 0 ? [1] : []
+    for_each = each.value.action == "ALLOW" ? each.value.allow : []
     content {
-      protocol = "tcp"
-      ports    = each.value.tcp_ports
+      protocol = allow.value.protocol
+      ports    = length(allow.value.ports) > 0 ? allow.value.ports : null
     }
   }
 
-  # Dynamically generate UDP allow rules only if udp_ports is not empty
-  dynamic "allow" {
-    for_each = length(each.value.udp_ports) > 0 ? [1] : []
+  # Dynamically generate DENY protocol and port blocks if action is set to DENY
+  dynamic "deny" {
+    for_each = each.value.action == "DENY" ? each.value.allow : []
     content {
-      protocol = "udp"
-      ports    = each.value.udp_ports
+      protocol = deny.value.protocol
+      ports    = length(deny.value.ports) > 0 ? deny.value.ports : null
     }
   }
-
-  source_ranges = var.allowed_source_ranges
-  target_tags   = each.value.target_tags
 }
 
 # Reserve a static external IP address to ensure persistent public reachability
@@ -112,10 +114,9 @@ resource "google_compute_instance" "app_vm" {
   deletion_protection = var.enable_deletion_protection
 
   # Dynamically read target_tags directly from the health check firewall resource
-  tags = distinct(concat(
-    tolist(google_compute_firewall.lb_health_check.target_tags),
-    flatten([for rule in local.firewall_rules : rule.target_tags])
-  ))
+  tags = distinct(flatten([
+    for rule_key, rule in local.firewall_rules : rule.target_tags
+  ]))
 
   boot_disk {
     initialize_params {
