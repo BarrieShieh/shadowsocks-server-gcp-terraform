@@ -50,3 +50,12 @@ resource "cloudflare_record" "dns" {
   proxied  = true
 }
 
+resource "cloudflare_record" "additional_dns" {
+  for_each = var.additional_dns
+  zone_id  = data.cloudflare_zone.domain[0].id
+  name     = each.key
+  content  = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip
+  type     = "A"
+  ttl      = 1
+  proxied  = true
+}

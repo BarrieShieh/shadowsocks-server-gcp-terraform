@@ -373,3 +373,9 @@ variable "domain" {
   type        = string
   description = "Cloudflare Domain"
 }
+
+variable "additional_dns" {
+  type        = set(string)
+  description = "Additional DNS A record for VM"
+  default     = []
+}
