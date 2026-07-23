@@ -1,31 +1,36 @@
 locals {
-  service_key   = "ws"
-  enable_tunnel = contains(keys(var.services), local.service_key)
+  # Filter active services where enabled is true AND key is NOT 'cloudflared' or 'caddy'
+  active_services = {
+    for k, v in var.services : k => v if v.enabled && !contains(["cloudflared", "caddy"], k)
+  }
 }
 
+# Fetch Cloudflare zone data only when there is at least one active service
 data "cloudflare_zone" "domain" {
-  count      = local.enable_tunnel ? 1 : 0
+  count      = length(local.active_services) > 0 ? 1 : 0
   account_id = var.cloudflare_account_id
   name       = var.domain
 }
 
+# Create a Cloudflare Zero Trust Tunnel for each active service key
 resource "cloudflare_zero_trust_tunnel_cloudflared" "tunnel" {
-  count      = local.enable_tunnel ? 1 : 0
+  for_each   = local.active_services
   account_id = var.cloudflare_account_id
-  name       = local.service_key
-  secret     = random_id.tunnel_secret[0].b64_std
+  name       = each.key
+  secret     = random_id.tunnel_secret[each.key].b64_std
 }
 
-resource "cloudflare_zero_trust_tunnel_cloudflared_config" "ss_v2ray_test_config" {
-  count      = local.enable_tunnel ? 1 : 0
+# Configure ingress rules for each active service tunnel
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
+  for_each   = local.active_services
   account_id = var.cloudflare_account_id
-  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.tunnel[0].id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.tunnel[each.key].id
 
   config {
     ingress_rule {
-      hostname = "${var.instance_name}-${local.service_key}.${var.domain}"
-      path     = "^/${local.service_key}"
-      service  = "http://${local.service_key}:${local.services[local.service_key].server_port}"
+      hostname = "${each.value.subdomain}.${var.domain}"
+      path     = "^/${each.key}"
+      service  = "http://${each.key}:${each.value.server_port}"
     }
 
     # Mandatory catch-all 404 rule required by Cloudflare
@@ -35,12 +40,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "ss_v2ray_test_config
   }
 }
 
-resource "cloudflare_record" "test_dns" {
-  count   = local.enable_tunnel ? 1 : 0
-  zone_id = data.cloudflare_zone.domain[0].id
-  name    = local.service_key
-  content = cloudflare_zero_trust_tunnel_cloudflared.tunnel[0].cname
-  type    = "CNAME"
-  proxied = true
+# Create CNAME DNS records pointing to each tunnel endpoint
+resource "cloudflare_record" "dns" {
+  for_each = local.active_services
+  zone_id  = data.cloudflare_zone.domain[0].id
+  name     = each.value.subdomain
+  content  = cloudflare_zero_trust_tunnel_cloudflared.tunnel[each.key].cname
+  type     = "CNAME"
+  proxied  = true
 }
 

@@ -325,7 +325,7 @@ variable "services" {
   description = "Map of proxy services and their deployment configurations"
   type = map(object({
     enabled     = bool
-    host        = optional(string, "")
+    subdomain   = optional(string, "")
     method      = optional(string, "2022-blake3-aes-256-gcm")
     server_port = optional(number, 9000)
   }))

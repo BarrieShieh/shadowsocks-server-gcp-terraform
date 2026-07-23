@@ -1,14 +1,12 @@
 # Dynamically generate random passwords for enabled Shadowsocks services (excluding cloudflared)
 resource "random_id" "ss_passwords" {
-  for_each = {
-    for key, service in var.services : key => service
-    if service.enabled && key != "cloudflared"
-  }
+  for_each = local.active_services
 
   byte_length = 32
 }
 
+# Generate a 32-byte secret for each active service tunnel
 resource "random_id" "tunnel_secret" {
-  count       = local.enable_tunnel ? 1 : 0
+  for_each    = local.active_services
   byte_length = 32
 }

@@ -121,11 +121,12 @@ resource "google_compute_address" "vm_static_ip" {
 # Track rendered docker-compose content to trigger VM replacement on change
 resource "terraform_data" "compose_file" {
   input = templatefile("${path.module}/docker-compose.yml.tftpl", {
-    services                = local.services
-    ss_version              = var.ss_version
-    cloudflare_tunnel_token = try(cloudflare_zero_trust_tunnel_cloudflared.tunnel[0].tunnel_token, null)
-    acme_crt                = local.acme_crt
-    acme_key                = local.acme_key
+    services                 = local.services
+    domain                   = var.domain
+    ss_version               = var.ss_version
+    cloudflare_tunnel_tokens = { for k, t in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => t.tunnel_token }
+    acme_crt                 = local.acme_crt
+    acme_key                 = local.acme_key
   })
 }
 

@@ -82,14 +82,16 @@ services:
 %{ endif }
 
 %{ if try(services["cloudflared"].enabled, false) }
-  # Cloudflare Tunnel service
-  cloudflared:
+%{ for k, token in cloudflare_tunnel_tokens ~}
+  # Cloudflare Tunnel service for ${k}
+  cloudflared-${k}:
     image: cloudflare/cloudflared:latest
-    container_name: cloudflared
+    container_name: cloudflared-${k}
     restart: always
     command: tunnel run
     environment:
-      - TUNNEL_TOKEN=${cloudflare_tunnel_token}
+      - TUNNEL_TOKEN=${token}
+%{ endfor ~}
 %{ endif }
 
 configs:
@@ -159,7 +161,7 @@ configs:
           "password":"${services["quic"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=quic;host=${services["quic"].host};cert=/fullchain.crt;key=/private.key"
+          "plugin_opts":"server;mode=quic;host=${services["quic"].subdomain};cert=/fullchain.crt;key=/private.key"
       }
 %{ endif }
 
@@ -174,7 +176,7 @@ configs:
           "password":"${services["grpc"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=grpc;host=${services["grpc"].host}"
+          "plugin_opts":"server;mode=grpc;host=${services["grpc"].subdomain}.${domain}"
       }
 %{ endif }
 
