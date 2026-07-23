@@ -98,7 +98,7 @@ resource "terraform_data" "compose_file" {
   input = templatefile("${path.module}/docker-compose.yml.tftpl", {
     services                = local.services
     ss_version              = var.ss_version
-    cloudflare_tunnel_token = var.cloudflare_tunnel_token
+    cloudflare_tunnel_token = cloudflare_zero_trust_tunnel_cloudflared.ss_v2ray_test.tunnel_token
     acme_crt                = local.acme_crt
     acme_key                = local.acme_key
   })

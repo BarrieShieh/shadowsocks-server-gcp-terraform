@@ -2,7 +2,7 @@
 # 1. CORE GCP PROJECT & REGION SETTINGS
 # ==============================================================================
 
-variable "project_id" {
+variable "gcp_project_id" {
   description = "The GCP Project ID where resources will be deployed"
   type        = string
   # Mandatory input without default value to prevent accidental deployments
@@ -398,8 +398,13 @@ variable "acme_key" {
   sensitive   = true
 }
 
-variable "cloudflare_tunnel_token" {
-  description = "Cloudflare Tunnel authentication token used to establish secure edge connections"
+variable "cloudflare_account_id" {
   type        = string
+  description = "Your Cloudflare Account ID"
+}
+
+variable "cloudflare_api_token" {
+  type        = string
+  description = "Cloudflare API Token with Tunnel and DNS permissions"
   sensitive   = true
 }
