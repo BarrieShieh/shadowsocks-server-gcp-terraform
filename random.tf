@@ -7,6 +7,6 @@ resource "random_id" "ss_passwords" {
 
 # Generate a 32-byte secret for each active service tunnel
 resource "random_id" "tunnel_secret" {
-  for_each    = local.active_services
+  for_each    = local.tunnel_services
   byte_length = 32
 }

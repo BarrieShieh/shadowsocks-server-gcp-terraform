@@ -11,6 +11,9 @@ locals {
       password = try(random_id.ss_passwords[key].b64_std, "")
     })
   }
+  active_services = {
+    for k, v in var.services : k => v if v.enabled && !contains(["cloudflared", "caddy"], k)
+  }
   active_passwords = {
     for key, res in random_id.ss_passwords : key => res.b64_std
   }
