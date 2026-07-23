@@ -316,7 +316,7 @@ variable "boot_disk_type" {
 # ==============================================================================
 
 variable "ss_version" {
-  description = "The container image tag or version of the Shadowsocks server application to deploy"
+  description = "The container image tag or version of the Shadowsocks-rust server application to deploy"
   type        = string
   default     = "1.24.0"
 }
