@@ -1,16 +1,16 @@
 services:
 %{ if try(services["caddy"].enabled, false) }
-  # Caddy service
+  # Caddy service (v2)
   caddy:
     container_name: caddy
-    image: abiosoft/caddy:1.0.3
+    image: caddy:2
     restart: always
     ports:
       - ${services["caddy"].server_port}:${services["caddy"].server_port}/tcp
       - ${services["caddy"].server_port}:${services["caddy"].server_port}/udp
     configs:
       - source: caddy-config
-        target: /etc/Caddyfile
+        target: /etc/caddy/Caddyfile
       - source: acme-crt
         target: /caddy.crt
       - source: acme-key
@@ -94,24 +94,46 @@ services:
 
 configs:
 %{ if try(services["v2ray-quic"].enabled, false) || try(services["v2ray-grpc"].enabled, false) || try(services["caddy"].enabled, false) }
-  # Shared SSL Certificate files for QUIC and gRPC endpoints
+  # Shared SSL Certificate files for QUIC, gRPC and Caddy endpoints
   acme-crt:
     content: ${jsonencode(acme_crt)}
   acme-key:
     content: ${jsonencode(acme_key)}
 %{ endif }
 
-%{ if try(services["caddy"].enabled, false) && try(services["v2ray-ws"].enabled, false) }
-  # Config for WebSocket mode
+%{ if try(services["caddy"].enabled, false) }
+  # Caddy v2 Caddyfile configuration
   caddy-config:
     content: |
       *.bloody-moon.com:${services["caddy"].server_port} {
-        gzip
+        encode gzip
         tls /caddy.crt /caddy.key
-        proxy / https://example.com/
-        proxy /ray v2ray-ws:${services["v2ray-ws"].server_port} {
-          websocket
-          header_upstream -Origin
+
+        %{ if try(services["v2ray-ws"].enabled, false) }
+        # Reverse proxy for WebSocket mode
+        reverse_proxy /ray v2ray-ws:${services["v2ray-ws"].server_port}
+        %{ endif }
+
+        %{ if try(services["v2ray-grpc"].enabled, false) }
+        # Reverse proxy for gRPC mode
+        reverse_proxy /ray-grpc v2ray-grpc:${services["v2ray-grpc"].server_port} {
+          transport grpc
+        }
+        %{ endif }
+
+        %{ if try(services["v2ray-quic"].enabled, false) }
+        # Reverse proxy for QUIC mode
+        reverse_proxy /ray-quic v2ray-quic:${services["v2ray-quic"].server_port}
+        %{ endif }
+
+        %{ if try(services["tls"].enabled, false) }
+        # Reverse proxy for direct TLS mode
+        reverse_proxy /tls tls:${services["tls"].server_port}
+        %{ endif }
+
+        # Default fallback (Disguise site)
+        reverse_proxy https://example.com {
+          header_up Host example.com
         }
       }
 %{ endif }
