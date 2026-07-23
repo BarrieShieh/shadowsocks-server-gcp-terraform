@@ -111,7 +111,7 @@ configs:
       *.bloody-moon.com:${services["ws"].server_port} {
         encode gzip
         tls /caddy.crt /caddy.key
-        reverse_proxy /ws ws:${services["ws"].server_port}
+        reverse_proxy ${services["ws"].path} ws:${services["ws"].server_port}
 
         # Default fallback (Disguise site)
         reverse_proxy https://example.com {
@@ -146,7 +146,7 @@ configs:
           "nameserver":"8.8.8.8",
           "mode":"tcp_and_udp",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;path=/ws"
+          "plugin_opts":"server;path=${services["ws"].path}"
       }
 %{ endif }
 

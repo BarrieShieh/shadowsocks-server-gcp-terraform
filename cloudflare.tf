@@ -29,7 +29,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   config {
     ingress_rule {
       hostname = "${each.value.subdomain}.${var.domain}"
-      path     = "^/${each.key}"
+      path     = each.value.path != "" ? "^${each.value.path}" : null
       service  = "http://${each.key}:${each.value.server_port}"
     }
 
