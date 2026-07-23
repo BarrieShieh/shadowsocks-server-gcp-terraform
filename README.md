@@ -14,7 +14,7 @@ This repository provides a fully automated setup for running a containerized Sha
 - **Firewall & Security Configuration:** Configures specific GCP Compute Firewall ingress rules for Shadowsocks traffic, SSH access, and ICMP health checks.
 - **Dockerized Setup:** Runs the Shadowsocks service via Docker inside the instance for isolation, stability, and easy updates.
 - **Flexible Parameters:** Customizable server specs, region/zone selection, proxy listening ports, passwords, and encryption ciphers via Terraform variables.
-- **Useful Outputs:** Automatically formats and exports connection URIs (`ss://`) upon successful deployment.
+
 
 ---
 
