@@ -75,46 +75,6 @@ sudo journalctl -u google-startup-scripts.service -f
 
 ---
 
-## Connecting to Shadowsocks
-
-After deployment completes, Terraform will output your instance's public IP address and a pre-formatted Shadowsocks URI:
-
-```text
-Outputs:
-
-public_ip = "123.45.67.89"
-ss_port   = 8388
-ss_uri    = "ss://YWVzLTI1Ni1nY206WW91clN0cm9uZ1NlY3JldFBhc3N3b3JkQDEyMy40NS42Ny44OTo4Mzg4"
-```
-
-Copy the `ss_uri` link directly into your Shadowsocks client (iOS, Android, macOS, Windows) to import the server configuration automatically.
-
----
-
-## Inputs & Outputs
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-| :--- | :--- | :--- | :--- | :---: |
-| `project_id` | GCP Project ID where resources will be created. | `string` | n/a | **yes** |
-| `region` | Target GCP region for resource allocation. | `string` | `"asia-east1"` | no |
-| `zone` | Target GCP zone for instance placement. | `string` | `"asia-east1-a"` | no |
-| `machine_type` | Compute Engine instance machine type. | `string` | `"e2-micro"` | no |
-| `ss_port` | Listening port for the Shadowsocks server. | `number` | `8388` | no |
-| `ss_password` | Secret password for client authentication. | `string` | n/a | **yes** |
-| `ss_cipher` | Encryption cipher (e.g., `chacha20-ietf-poly1305`, `aes-256-gcm`). | `string` | `"chacha20-ietf-poly1305"` | no |
-
-### Outputs
-
-| Name | Description |
-| :--- | :--- |
-| `public_ip` | External IPv4 address assigned to the server VM. |
-| `ss_port` | The port on which Shadowsocks is listening. |
-| `ss_uri` | Encoded `ss://` connection string for easy client import. |
-
----
-
 ## Cleanup / Teardown
 
 To avoid ongoing GCP charges, you can remove all infrastructure managed by this project:
