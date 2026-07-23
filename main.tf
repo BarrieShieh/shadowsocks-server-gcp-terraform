@@ -14,13 +14,38 @@ locals {
   active_passwords = {
     for key, res in random_id.ss_passwords : key => res.b64_std
   }
+  service_firewall_rules = {
+    for key, svc in var.services : "svc-${key}" => {
+      name               = "allow-${key}"
+      enforcement_order  = 1
+      deployment_scope   = "GLOBAL"
+      priority           = 1000
+      description        = "Auto-generated ingress rule for ${key}"
+      direction          = "INGRESS"
+      target_tags        = [key]
+      source_ranges      = ["0.0.0.0/0"]
+      destination_ranges = []
+      action             = "ALLOW"
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = [tostring(svc.server_port)]
+        },
+        {
+          protocol = "udp"
+          ports    = [tostring(svc.server_port)]
+        }
+      ]
+    }
+    if svc.enabled # Filter out disabled services
+  }
   # Merge dynamic rules with custom firewall rules from variable inputs
   firewall_rules = merge(
     var.default_firewall_rules,
+    local.service_firewall_rules,
     var.firewall_rules
   )
 }
-
 # ==============================================================================
 # 2. NETWORKING RESOURCES (VPC & FIREWALL)
 # ==============================================================================

@@ -111,42 +111,6 @@ variable "default_firewall_rules" {
         }
       ]
     }
-    default-allow-https = {
-      name               = "default-allow-https"
-      enforcement_order  = 1
-      deployment_scope   = "GLOBAL"
-      priority           = 1000
-      description        = null
-      direction          = "INGRESS"
-      target_tags        = ["https-server"]
-      source_ranges      = ["0.0.0.0/0"]
-      destination_ranges = []
-      action             = "ALLOW"
-      allow = [
-        {
-          protocol = "tcp"
-          ports    = ["443"]
-        }
-      ]
-    }
-    default-allow-http = {
-      name               = "default-allow-http"
-      enforcement_order  = 1
-      deployment_scope   = "GLOBAL"
-      priority           = 1000
-      description        = null
-      direction          = "INGRESS"
-      target_tags        = ["http-server"]
-      source_ranges      = ["0.0.0.0/0"]
-      destination_ranges = []
-      action             = "ALLOW"
-      allow = [
-        {
-          protocol = "tcp"
-          ports    = ["80"]
-        }
-      ]
-    }
     default-allow-icmp = {
       name               = "default-allow-icmp"
       enforcement_order  = 1
