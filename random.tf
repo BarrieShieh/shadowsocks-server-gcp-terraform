@@ -7,3 +7,8 @@ resource "random_id" "ss_passwords" {
 
   byte_length = 32
 }
+
+resource "random_id" "tunnel_secret" {
+  count       = local.enable_tunnel ? 1 : 0
+  byte_length = 32
+}

@@ -36,12 +36,6 @@ variable "auto_create_subnetworks" {
   default     = true
 }
 
-variable "allowed_source_ranges" {
-  description = "List of CIDR blocks permitted to initiate inbound traffic to the instance"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
 variable "default_firewall_rules" {
   description = "Map of GCP firewall rule definitions extracted from the GCP Console"
 
@@ -407,4 +401,9 @@ variable "cloudflare_api_token" {
   type        = string
   description = "Cloudflare API Token with Tunnel and DNS permissions"
   sensitive   = true
+}
+
+variable "domain" {
+  type        = string
+  description = "Cloudflare Domain"
 }
