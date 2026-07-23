@@ -6,8 +6,14 @@ services:
     image: caddy:2
     restart: always
     ports:
-      - ${services["caddy"].server_port}:${services["caddy"].server_port}/tcp
-      - ${services["caddy"].server_port}:${services["caddy"].server_port}/udp
+      %{ if try(services["v2ray-ws"].enabled, false) }
+      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/tcp
+      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/udp
+      %{ endif }
+      %{ if try(services["v2ray-grpc"].enabled, false) }
+      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/tcp
+      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/udp
+      %{ endif }
     configs:
       - source: caddy-config
         target: /etc/caddy/Caddyfile
@@ -23,9 +29,6 @@ services:
     container_name: v2ray-ws
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
-    ports:
-      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/tcp
-      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/udp
     configs:
       - source: v2ray-ws-config
         target: /etc/shadowsocks-rust/config.json
@@ -55,9 +58,6 @@ services:
     container_name: v2ray-grpc
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
-    ports:
-      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/tcp
-      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/udp
     configs:
       - source: v2ray-grpc-config
         target: /etc/shadowsocks-rust/config.json
@@ -105,37 +105,31 @@ configs:
   # Caddy v2 Caddyfile configuration
   caddy-config:
     content: |
-      *.bloody-moon.com:${services["caddy"].server_port} {
+      %{ if try(services["v2ray-ws"].enabled, false) }
+      *.bloody-moon.com:${services["v2ray-ws"].server_port} {
         encode gzip
         tls /caddy.crt /caddy.key
-
-        %{ if try(services["v2ray-ws"].enabled, false) }
-        # Reverse proxy for WebSocket mode
         reverse_proxy /ray v2ray-ws:${services["v2ray-ws"].server_port}
-        %{ endif }
-
-        %{ if try(services["v2ray-grpc"].enabled, false) }
-        # Reverse proxy for gRPC mode
-        reverse_proxy /ray-grpc v2ray-grpc:${services["v2ray-grpc"].server_port} {
-          transport grpc
-        }
-        %{ endif }
-
-        %{ if try(services["v2ray-quic"].enabled, false) }
-        # Reverse proxy for QUIC mode
-        reverse_proxy /ray-quic v2ray-quic:${services["v2ray-quic"].server_port}
-        %{ endif }
-
-        %{ if try(services["tls"].enabled, false) }
-        # Reverse proxy for direct TLS mode
-        reverse_proxy /tls tls:${services["tls"].server_port}
-        %{ endif }
 
         # Default fallback (Disguise site)
         reverse_proxy https://example.com {
           header_up Host example.com
         }
       }
+      %{ endif }
+
+      %{ if try(services["v2ray-grpc"].enabled, false) }
+      *.bloody-moon.com:${services["v2ray-grpc"].server_port} {
+        encode gzip
+        tls /caddy.crt /caddy.key
+        reverse_proxy h2c://v2ray-grpc:${services["v2ray-grpc"].server_port}
+
+        # Default fallback (Disguise site)
+        reverse_proxy https://example.com {
+          header_up Host example.com
+        }
+      }
+      %{ endif }
 %{ endif }
 
 %{ if try(services["v2ray-ws"].enabled, false) }
@@ -180,7 +174,7 @@ configs:
           "password":"${services["v2ray-grpc"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=grpc;tls;host=${services["v2ray-grpc"].host};cert=/fullchain.crt;key=/private.key"
+          "plugin_opts":"server;mode=grpc;host=${services["v2ray-grpc"].host}"
       }
 %{ endif }
 
