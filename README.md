@@ -15,22 +15,6 @@ This repository provides a fully automated setup for running a containerized Sha
 - **Dockerized Setup:** Runs the Shadowsocks service via Docker inside the instance for isolation, stability, and easy updates.
 - **Flexible Parameters:** Customizable server specs, region/zone selection, proxy listening ports, passwords, and encryption ciphers via Terraform variables.
 
-
----
-
-## Repository Structure
-
-```text
-.
-├── main.tf                  # Primary GCP resource definitions (Compute instance, Firewall rules, Network interfaces)
-├── variables.tf             # Input variables declaration and validation rules
-├── outputs.tf               # Infrastructure outputs (External IP, Connection URI, Port)
-├── terraform.tfvars.example # Example variable configuration template
-├── scripts/
-│   └── startup.sh           # Cloud-init / Shell startup script for Docker and Shadowsocks startup
-└── README.md                # Project documentation
-```
-
 ---
 
 ## Prerequisites
