@@ -6,13 +6,13 @@ services:
     image: caddy:2
     restart: always
     ports:
-      %{ if try(services["v2ray-ws"].enabled, false) }
-      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/tcp
-      - ${services["v2ray-ws"].server_port}:${services["v2ray-ws"].server_port}/udp
+      %{ if try(services["ws"].enabled, false) }
+      - ${services["ws"].server_port}:${services["ws"].server_port}/tcp
+      - ${services["ws"].server_port}:${services["ws"].server_port}/udp
       %{ endif }
-      %{ if try(services["v2ray-grpc"].enabled, false) }
-      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/tcp
-      - ${services["v2ray-grpc"].server_port}:${services["v2ray-grpc"].server_port}/udp
+      %{ if try(services["grpc"].enabled, false) }
+      - ${services["grpc"].server_port}:${services["grpc"].server_port}/tcp
+      - ${services["grpc"].server_port}:${services["grpc"].server_port}/udp
       %{ endif }
     configs:
       - source: caddy-config
@@ -23,28 +23,28 @@ services:
         target: /caddy.key
 %{ endif }
 
-%{ if try(services["v2ray-ws"].enabled, false) }
+%{ if try(services["ws"].enabled, false) }
   # Shadowsocks V2Ray WebSocket service
-  v2ray-ws:
-    container_name: v2ray-ws
+  ws:
+    container_name: ws
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
     configs:
-      - source: v2ray-ws-config
+      - source: ws-config
         target: /etc/shadowsocks-rust/config.json
 %{ endif }
 
-%{ if try(services["v2ray-quic"].enabled, false) }
+%{ if try(services["quic"].enabled, false) }
   # Shadowsocks V2Ray QUIC service
-  v2ray-quic:
-    container_name: v2ray-quic
+  quic:
+    container_name: quic
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
     ports:
-      - ${services["v2ray-quic"].server_port}:${services["v2ray-quic"].server_port}/tcp
-      - ${services["v2ray-quic"].server_port}:${services["v2ray-quic"].server_port}/udp
+      - ${services["quic"].server_port}:${services["quic"].server_port}/tcp
+      - ${services["quic"].server_port}:${services["quic"].server_port}/udp
     configs:
-      - source: v2ray-quic-config
+      - source: quic-config
         target: /etc/shadowsocks-rust/config.json
       - source: acme-crt
         target: /fullchain.crt
@@ -52,14 +52,14 @@ services:
         target: /private.key
 %{ endif }
 
-%{ if try(services["v2ray-grpc"].enabled, false) }
+%{ if try(services["grpc"].enabled, false) }
   # Shadowsocks V2Ray gRPC service
-  v2ray-grpc:
-    container_name: v2ray-grpc
+  grpc:
+    container_name: grpc
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
     configs:
-      - source: v2ray-grpc-config
+      - source: grpc-config
         target: /etc/shadowsocks-rust/config.json
       - source: acme-crt
         target: /fullchain.crt
@@ -93,7 +93,7 @@ services:
 %{ endif }
 
 configs:
-%{ if try(services["v2ray-quic"].enabled, false) || try(services["v2ray-grpc"].enabled, false) || try(services["caddy"].enabled, false) }
+%{ if try(services["quic"].enabled, false) || try(services["grpc"].enabled, false) || try(services["ws"].enabled, false) || try(services["caddy"].enabled, false) }
   # Shared SSL Certificate files for QUIC, gRPC and Caddy endpoints
   acme-crt:
     content: ${jsonencode(acme_crt)}
@@ -105,11 +105,11 @@ configs:
   # Caddy v2 Caddyfile configuration
   caddy-config:
     content: |
-      %{ if try(services["v2ray-ws"].enabled, false) }
-      *.bloody-moon.com:${services["v2ray-ws"].server_port} {
+      %{ if try(services["ws"].enabled, false) }
+      *.bloody-moon.com:${services["ws"].server_port} {
         encode gzip
         tls /caddy.crt /caddy.key
-        reverse_proxy /ray v2ray-ws:${services["v2ray-ws"].server_port}
+        reverse_proxy /ws ws:${services["ws"].server_port}
 
         # Default fallback (Disguise site)
         reverse_proxy https://example.com {
@@ -118,11 +118,11 @@ configs:
       }
       %{ endif }
 
-      %{ if try(services["v2ray-grpc"].enabled, false) }
-      *.bloody-moon.com:${services["v2ray-grpc"].server_port} {
+      %{ if try(services["grpc"].enabled, false) }
+      *.bloody-moon.com:${services["grpc"].server_port} {
         encode gzip
         tls /caddy.crt /caddy.key
-        reverse_proxy h2c://v2ray-grpc:${services["v2ray-grpc"].server_port}
+        reverse_proxy h2c://grpc:${services["grpc"].server_port}
 
         # Default fallback (Disguise site)
         reverse_proxy https://example.com {
@@ -132,49 +132,49 @@ configs:
       %{ endif }
 %{ endif }
 
-%{ if try(services["v2ray-ws"].enabled, false) }
+%{ if try(services["ws"].enabled, false) }
   # Config for WebSocket mode
-  v2ray-ws-config:
+  ws-config:
     content: |
       {
           "server":"0.0.0.0",
-          "server_port":${services["v2ray-ws"].server_port},
-          "method":"${services["v2ray-ws"].method}",
-          "password":"${services["v2ray-ws"].password}",
+          "server_port":${services["ws"].server_port},
+          "method":"${services["ws"].method}",
+          "password":"${services["ws"].password}",
           "nameserver":"8.8.8.8",
           "mode":"tcp_and_udp",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;path=/ray"
+          "plugin_opts":"server;path=/ws"
       }
 %{ endif }
 
-%{ if try(services["v2ray-quic"].enabled, false) }
+%{ if try(services["quic"].enabled, false) }
   # Config for QUIC mode
-  v2ray-quic-config:
+  quic-config:
     content: |
       {
           "server":"0.0.0.0",
-          "server_port":${services["v2ray-quic"].server_port},
-          "method":"${services["v2ray-quic"].method}",
-          "password":"${services["v2ray-quic"].password}",
+          "server_port":${services["quic"].server_port},
+          "method":"${services["quic"].method}",
+          "password":"${services["quic"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=quic;host=${services["v2ray-quic"].host};cert=/fullchain.crt;key=/private.key"
+          "plugin_opts":"server;mode=quic;host=${services["quic"].host};cert=/fullchain.crt;key=/private.key"
       }
 %{ endif }
 
-%{ if try(services["v2ray-grpc"].enabled, false) }
+%{ if try(services["grpc"].enabled, false) }
   # Config for gRPC mode
-  v2ray-grpc-config:
+  grpc-config:
     content: |
       {
           "server":"0.0.0.0",
-          "server_port":${services["v2ray-grpc"].server_port},
-          "method":"${services["v2ray-grpc"].method}",
-          "password":"${services["v2ray-grpc"].password}",
+          "server_port":${services["grpc"].server_port},
+          "method":"${services["grpc"].method}",
+          "password":"${services["grpc"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=grpc;host=${services["v2ray-grpc"].host}"
+          "plugin_opts":"server;mode=grpc;host=${services["grpc"].host}"
       }
 %{ endif }
 

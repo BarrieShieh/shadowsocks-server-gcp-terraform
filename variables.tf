@@ -335,9 +335,9 @@ variable "services" {
   # Validate that only allowed service keys are defined
   validation {
     condition = length(setsubtract(keys(var.services), [
-      "v2ray-ws", "v2ray-quic", "v2ray-grpc", "tls", "cloudflared", "caddy"
+      "ws", "quic", "grpc", "tls", "cloudflared", "caddy"
     ])) == 0
-    error_message = "Invalid service key specified. Allowed options: 'v2ray-ws', 'v2ray-quic', 'v2ray-grpc', 'tls', 'cloudflared', 'caddy'."
+    error_message = "Invalid service key specified. Allowed options: 'ws', 'quic', 'grpc', 'tls', 'cloudflared', 'caddy'."
   }
 }
 

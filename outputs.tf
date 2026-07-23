@@ -1,7 +1,7 @@
 # Output dynamically generated passwords list
 output "shadowsocks_passwords" {
   description = "Dynamically generated list of active Shadowsocks passwords"
-  sensitive   = true # Must be set to true to avoid errors during terraform apply
+  sensitive   = true
   value       = local.active_passwords
 }
 
