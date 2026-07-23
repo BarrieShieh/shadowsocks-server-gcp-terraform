@@ -374,7 +374,7 @@ variable "domain" {
   description = "Cloudflare Domain"
 }
 
-variable "additional_dns" {
+variable "additional_subdomain" {
   type        = set(string)
   description = "Additional DNS A record for VM"
   default     = []
