@@ -95,13 +95,11 @@ services:
 %{ endif }
 
 configs:
-%{ if try(services["quic"].enabled, false) || try(services["grpc"].enabled, false) || try(services["ws"].enabled, false) || try(services["caddy"].enabled, false) }
   # Shared SSL Certificate files for QUIC, gRPC and Caddy endpoints
   acme-crt:
     content: ${jsonencode(acme_crt)}
   acme-key:
     content: ${jsonencode(acme_key)}
-%{ endif }
 
 %{ if try(services["caddy"].enabled, false) }
   # Caddy v2 Caddyfile configuration

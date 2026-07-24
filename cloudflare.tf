@@ -59,3 +59,9 @@ resource "cloudflare_record" "additional_dns" {
   ttl      = 1
   proxied  = true
 }
+
+# Generate a 32-byte secret for each active service tunnel
+resource "random_id" "tunnel_secret" {
+  for_each    = local.tunnel_services
+  byte_length = 32
+}
