@@ -41,7 +41,7 @@ terraform.rc
 # ==============================================================================
 # Local TLS/SSL private keys and ACME certificates
 keys/
-
+certs/
 # Sensitive configuration outputs and generated credentials (e.g., passwords.json)
 configs/
 

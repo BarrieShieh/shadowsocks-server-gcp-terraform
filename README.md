@@ -35,80 +35,72 @@ Before applying your infrastructure, create or customize a `.tfvars` file under 
 ### Example `tfvars` Configuration
 
 ```hcl
-# Target GCP Project ID
-project_id = "cloud-162606"
+# ==============================================================================
+# GENERAL & PROVIDER SETTINGS
+# ==============================================================================
 
-# Service configurations for Shadowsocks and its plugins
+# Target Google Cloud Project ID where infrastructure will be deployed
+gcp_project_id = "your-gcp-project-id"
+
+# Base domain name (managed via Cloudflare DNS)
+domain = "example.com"
+
+# Cloudflare credentials for DNS record management and Zero Trust tunnels
+cloudflare_account_id = "your-cloudflare-account-id"
+cloudflare_api_token  = "your-cloudflare-api-token"
+
+# Email address used for ACME / Let's Encrypt TLS certificate registration
+email_address = "admin@example.com"
+
+# Optional additional DNS subdomains to bind to this deployment
+additional_subdomain = ["test2"]
+
+# ==============================================================================
+# SERVICES CONFIGURATION
+# ==============================================================================
+
 services = {
+  # Direct TLS entry point (Disabled)
   tls = {
-    enabled     = true
+    enabled     = false
     method      = "2022-blake3-aes-256-gcm"
     server_port = 80
   }
-  v2ray-ws = {
-    enabled     = false
-    method      = "2022-blake3-aes-256-gcm"
-    server_port = 9000
+
+  # WebSocket transport exposed via Cloudflare Zero Trust Tunnel
+  ws = {
+    enabled       = true
+    subdomain     = "test1"
+    path          = "/ws"
+    method        = "2022-blake3-aes-256-gcm"
+    server_port   = 443
+    create_tunnel = true
   }
-  v2ray-grpc = {
+
+  # gRPC transport service
+  grpc = {
     enabled     = true
-    host        = "<host>"
     method      = "2022-blake3-aes-256-gcm"
-    server_port = 443
+    server_port = 8443
   }
-  v2ray-quic = {
-    enabled     = false
-    host        = "<host>"
+
+  # QUIC / UDP transport service
+  quic = {
+    enabled     = true
     method      = "2022-blake3-aes-256-gcm"
-    server_port = 443
+    server_port = 2053
   }
+
+  # Cloudflare Tunnel daemon container
   cloudflared = {
-    enabled = false
+    enabled = true
+  }
+
+  # Caddy reverse proxy web server container
+  caddy = {
+    enabled = true
   }
 }
-
-# Custom GCP Compute Firewall rules
-firewall_rules = {
-  v2ray-quic = {
-    name          = "v2ray-quic"
-    priority      = 1000
-    direction     = "INGRESS"
-    target_tags   = ["v2ray-quic"]
-    source_ranges = ["0.0.0.0/0"]
-    allow = [
-      {
-        protocol = "tcp"
-        ports    = ["8080"]
-      },
-      {
-        protocol = "udp"
-        ports    = ["8080"]
-      }
-    ]
-  }
-  v2ray-ws = {
-    name          = "v2ray-ws"
-    priority      = 1000
-    direction     = "INGRESS"
-    target_tags   = ["v2ray-ws"]
-    source_ranges = ["0.0.0.0/0"]
-    allow = [
-      {
-        protocol = "tcp"
-        ports    = ["9000"]
-      },
-      {
-        protocol = "udp"
-        ports    = ["9000"]
-      }
-    ]
-  }
-}
-
-# TLS certificates and tunnel secrets (Base64 encoded)
-acme_crt                = "<base64(fullchain.crt)>"
-acme_key                = "<base64(private.key)>"
-cloudflare_tunnel_token = "<cloudflare_tunnel_token>"
 ```
 
 ---
