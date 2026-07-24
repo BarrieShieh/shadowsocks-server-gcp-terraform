@@ -8,11 +8,11 @@ on:
         required: true
         default: "plan"
         type: choice
-        options: [ plan, apply, destroy ] # 增加了 destroy 选项
+        options: [ plan, apply, destroy ]
 
 env:
   TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
-  TF_VAR_cloudflare_account_id: ${{ vars.GCP_PROJECT_ID }} # 注意：确认此变量映射是否符合预期
+  TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
   TF_VAR_email_address: ${{ vars.EMAIL_ADDRESS }}
   TF_VAR_domain: ${{ vars.DOMAIN }}
   TF_VAR_subdomain: ${{ vars.SUBDOMAIN }}
