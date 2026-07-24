@@ -35,12 +35,6 @@ Before applying your infrastructure, create or customize a `.tfvars` file under 
 ### Example `tfvars` Configuration
 
 ```hcl
-/*
-  Cloudflare Default Proxied Ports Reference:
-  - HTTP:  80, 8080, 8880, 2052, 2082, 2086, 2095
-  - HTTPS: 443, 2053, 2083, 2087, 2096, 8443
-*/
-
 # ==============================================================================
 # GENERAL & PROVIDER SETTINGS
 # ==============================================================================
@@ -64,7 +58,11 @@ additional_subdomain = ["test2"]
 # ==============================================================================
 # SERVICES CONFIGURATION
 # ==============================================================================
-
+/*
+  Cloudflare Default Proxied Ports Reference:
+  - HTTP:  80, 8080, 8880, 2052, 2082, 2086, 2095
+  - HTTPS: 443, 2053, 2083, 2087, 2096, 8443
+*/
 services = {
   # Direct TLS service
   tls = {
