@@ -51,6 +51,7 @@ resource "cloudflare_record" "tunnel_dns_record" {
 }
 
 resource "cloudflare_record" "dns_record" {
+  count   = length(local.tunnel_services) > 0 ? 1 : 0
   zone_id = data.cloudflare_zone.domain[0].id
   name    = var.subdomain
   content = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip
