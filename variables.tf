@@ -28,10 +28,9 @@ variable "domain" {
   type        = string
 }
 
-variable "additional_subdomain" {
-  description = "Set of additional subdomains to associate with DNS A records pointing to the VM"
-  type        = set(string)
-  default     = []
+variable "subdomain" {
+  description = "subdomain to associate with DNS A records pointing to the VM"
+  type        = string
 }
 
 variable "email_address" {
@@ -362,12 +361,12 @@ variable "ss_version" {
 variable "services" {
   description = "Map of proxy services and their protocol deployment specifications"
   type = map(object({
-    enabled       = bool
-    subdomain     = optional(string, "")
-    path          = optional(string, "")
-    method        = optional(string, "2022-blake3-aes-256-gcm")
-    server_port   = optional(number, 9000)
-    create_tunnel = optional(bool, false)
+    enabled          = bool
+    path             = optional(string, "")
+    method           = optional(string, "2022-blake3-aes-256-gcm")
+    server_port      = optional(number, 9000)
+    create_tunnel    = optional(bool, false)
+    tunnel_subdomain = optional(string, "")
   }))
 
   default = {}

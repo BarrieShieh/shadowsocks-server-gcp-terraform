@@ -10,10 +10,10 @@ services:
       - ${services["ws"].server_port}:${services["ws"].server_port}/tcp
       - ${services["ws"].server_port}:${services["ws"].server_port}/udp
       %{ endif }
-      %{ if try(services["grpc"].enabled, false) }
-      - ${services["grpc"].server_port}:${services["grpc"].server_port}/tcp
-      - ${services["grpc"].server_port}:${services["grpc"].server_port}/udp
-      %{ endif }
+      #%{ if try(services["grpc"].enabled, false) }
+      #- ${services["grpc"].server_port}:${services["grpc"].server_port}/tcp
+      #- ${services["grpc"].server_port}:${services["grpc"].server_port}/udp
+      #%{ endif }
     configs:
       - source: caddy-config
         target: /etc/caddy/Caddyfile
@@ -58,6 +58,9 @@ services:
     container_name: grpc
     image: teddysun/shadowsocks-rust:${ss_version}
     restart: always
+    ports:
+      - ${services["grpc"].server_port}:${services["grpc"].server_port}/tcp
+      - ${services["grpc"].server_port}:${services["grpc"].server_port}/udp
     configs:
       - source: grpc-config
         target: /etc/shadowsocks-rust/config.json
@@ -118,18 +121,18 @@ configs:
       }
       %{ endif }
 
-      %{ if try(services["grpc"].enabled, false) }
-      *.bloody-moon.com:${services["grpc"].server_port} {
-        encode gzip
-        tls /caddy.crt /caddy.key
-        reverse_proxy h2c://grpc:${services["grpc"].server_port}
+      #%{ if try(services["grpc"].enabled, false) }
+      #*.bloody-moon.com:${services["grpc"].server_port} {
+      #  encode gzip
+      #  tls /caddy.crt /caddy.key
+      #  reverse_proxy h2c://grpc:${services["grpc"].server_port}
 
-        # Default fallback (Disguise site)
-        reverse_proxy https://example.com {
-          header_up Host example.com
-        }
-      }
-      %{ endif }
+      #  # Default fallback (Disguise site)
+      #  reverse_proxy https://example.com {
+      #    header_up Host example.com
+      #  }
+      #}
+      #%{ endif }
 %{ endif }
 
 %{ if try(services["ws"].enabled, false) }
@@ -159,7 +162,7 @@ configs:
           "password":"${services["quic"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=quic;host=${services["quic"].subdomain};cert=/fullchain.crt;key=/private.key"
+          "plugin_opts":"server;mode=quic;host=${subdomain}.${domain}};cert=/fullchain.crt;key=/private.key"
       }
 %{ endif }
 
@@ -174,7 +177,7 @@ configs:
           "password":"${services["grpc"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=grpc;host=${services["grpc"].subdomain}.${domain}"
+          "plugin_opts":"server;mode=grpc;tls;host=${subdomain}.${domain};cert=/fullchain.crt;key=/private.key"
       }
 %{ endif }
 

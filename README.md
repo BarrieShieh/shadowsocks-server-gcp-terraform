@@ -52,8 +52,8 @@ cloudflare_api_token  = "your-cloudflare-api-token"
 # Email address used for ACME / Let's Encrypt TLS certificate registration
 email_address = "admin@example.com"
 
-# Optional additional DNS subdomains to bind to this deployment
-additional_subdomain = ["test2"]
+# DNS subdomains to bind to this deployment
+subdomain = "test2"
 
 # ==============================================================================
 # SERVICES CONFIGURATION
@@ -73,12 +73,12 @@ services = {
 
   # WebSocket service routed via Cloudflare Tunnel
   ws = {
-    enabled       = true
-    subdomain     = "test1"
-    path          = "/ws"
-    method        = "2022-blake3-aes-256-gcm"
-    server_port   = 443
-    create_tunnel = true
+    enabled          = true
+    path             = "/ws"
+    method           = "2022-blake3-aes-256-gcm"
+    server_port      = 443
+    create_tunnel    = true
+    tunnel_subdomain = "test1"
   }
 
   # gRPC transport service

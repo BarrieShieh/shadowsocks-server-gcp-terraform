@@ -28,7 +28,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
 
   config {
     ingress_rule {
-      hostname = "${each.value.subdomain}.${var.domain}"
+      hostname = "${each.value.tunnel_subdomain}.${var.domain}"
       path     = each.value.path != "" ? "^${each.value.path}" : null
       service  = "http://${each.key}:${each.value.server_port}"
     }
@@ -41,23 +41,22 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
 }
 
 # Create CNAME DNS records pointing to each tunnel endpoint
-resource "cloudflare_record" "dns" {
+resource "cloudflare_record" "tunnel_dns_record" {
   for_each = local.tunnel_services
   zone_id  = data.cloudflare_zone.domain[0].id
-  name     = each.value.subdomain
+  name     = each.value.tunnel_subdomain
   content  = cloudflare_zero_trust_tunnel_cloudflared.tunnel[each.key].cname
   type     = "CNAME"
   proxied  = true
 }
 
-resource "cloudflare_record" "additional_dns" {
-  for_each = var.additional_subdomain
-  zone_id  = data.cloudflare_zone.domain[0].id
-  name     = each.key
-  content  = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip
-  type     = "A"
-  ttl      = 1
-  proxied  = true
+resource "cloudflare_record" "dns_record" {
+  zone_id = data.cloudflare_zone.domain[0].id
+  name    = var.subdomain
+  content = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip
+  type    = "A"
+  ttl     = 1
+  proxied = true
 }
 
 # Generate a 32-byte secret for each active service tunnel
