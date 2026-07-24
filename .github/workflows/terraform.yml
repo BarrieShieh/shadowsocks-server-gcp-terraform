@@ -1,7 +1,22 @@
-name: Terraform CI
+name: Terraform Manual CI/CD
 
 on:
-  workflow_dispatch: # 改为手动触发（在 GitHub Actions 页面点击按钮运行）
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "选择执行的操作"
+        required: true
+        default: "plan"
+        type: choice
+        options: [ plan, apply ]
+
+env:
+  TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+  TF_VAR_cloudflare_account_id: ${{ vars.GCP_PROJECT_ID }}
+  TF_VAR_email_address: ${{ vars.EMAIL_ADDRESS }}
+  TF_VAR_domain: ${{ vars.DOMAIN }}
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
 
 jobs:
   terraform:
@@ -19,6 +34,7 @@ jobs:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Plan
+        if: ${{ inputs.action == 'plan' }}
         run: terraform plan
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
