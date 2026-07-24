@@ -1,10 +1,7 @@
 name: Terraform CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: # 改为手动触发（在 GitHub Actions 页面点击按钮运行）
 
 jobs:
   terraform:
