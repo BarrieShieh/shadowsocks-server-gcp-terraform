@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "选择执行的操作"
+        description: "Choose Action"
         required: true
         default: "plan"
         type: choice
