@@ -79,6 +79,12 @@ jobs:
         run: |
           terraform output -json > terraform_output.json
           terraform output > terraform_output.txt
+          
+          # Render outputs directly in the GitHub Job Summary view
+          echo "## Terraform Outputs" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat terraform_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       # Step 7: Upload output artifacts for workflow download
       - name: Upload Output Artifact
