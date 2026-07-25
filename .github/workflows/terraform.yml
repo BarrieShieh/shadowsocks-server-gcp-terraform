@@ -91,7 +91,7 @@ jobs:
         if: ${{ inputs.action == 'apply' }}
         uses: actions/upload-artifact@v4
         with:
-          name: tf-outputs-${{ inputs.environment }}-${{ inputs.config }}
+          name: tf-outputs-${{ inputs.environment }}-${{ inputs.config }}-${{ github.run_id }}
           path: |
             terraform_output.json
             terraform_output.txt
