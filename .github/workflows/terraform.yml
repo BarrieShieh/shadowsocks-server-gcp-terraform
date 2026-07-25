@@ -25,8 +25,8 @@ on:
         type: choice
         options:
           - "cloud-162606"
-      config:
-        description: "The name of config"
+      instance:
+        description: "Host name and GCP resource ID for the Compute Engine VM instance"
         required: true
         type: string
 
@@ -48,6 +48,9 @@ env:
 
   # Terraform Cloud Workspace name
   TF_WORKSPACE: ${{ inputs.environment }}
+
+  # Terraform input variable 'var.instance_name' mapped to the GitHub Action input 'instance'
+  TF_VAR_instance_name: ${{ inputs.instance }}
 
 jobs:
   deploy:
