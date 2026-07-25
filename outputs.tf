@@ -28,3 +28,10 @@ output "fullchain_pem" {
   sensitive   = true
   value       = var.enable_cloudflare ? "${acme_certificate.cert[0].certificate_pem}${acme_certificate.cert[0].issuer_pem}" : null
 }
+
+# Map of SIP002 compliant Shadowsocks connection URIs with optional v2ray-plugin query parameters
+output "shadowsocks_uris" {
+  description = "Map of SIP002 compliant Shadowsocks URIs for active services, keyed by service name."
+  sensitive   = true
+  value       = local.shadowsocks_uris
+}

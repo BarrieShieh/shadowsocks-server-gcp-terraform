@@ -15,8 +15,11 @@ locals {
   }
 
   # Filter out non-target proxy services requiring password generation
+  # Excludes cloudflared/caddy, as well as ws/quic/grpc when Cloudflare is disabled
   active_services = {
-    for k, v in var.services : k => v if v.enabled && !contains(["cloudflared", "caddy"], k)
+    for k, v in var.services : k => v if v.enabled &&
+    !contains(["cloudflared", "caddy"], k) &&
+    (var.enable_cloudflare || !contains(["ws", "quic", "grpc"], k))
   }
 
   # Map generated base64 passwords by service key
@@ -57,6 +60,34 @@ locals {
     local.service_firewall_rules,
     var.firewall_rules
   )
+
+  # Map of calculated FQDN hostnames for active services
+  # Safely handles null values for var.subdomain and var.domain
+  service_hosts = {
+    for key, svc in local.active_services : key => (
+      key == "ws" && try(svc.create_tunnel, false) && try(svc.tunnel_subdomain, "") != ""
+      ? try("${svc.tunnel_subdomain}.${var.domain}", "")
+      : (var.subdomain != null && var.domain != null ? "${var.subdomain}.${var.domain}" : "")
+    )
+  }
+
+  # Map of formatted v2ray-plugin query parameters for active services
+  v2ray_plugin_opts = {
+    for key, svc in local.active_services : key => lookup({
+      # Escapes slashes in the path string (e.g., /ws -> \/ws) for v2ray-plugin syntax
+      ws   = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;mux=true;path=%s;host=%s;mode=websocket;tls=true", replace(try(svc.path, ""), "/", "\\/"), local.service_hosts[key]))}"
+      grpc = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;host=%s;mode=grpc;tls=true", local.service_hosts[key]))}"
+      quic = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;host=%s;mode=quic;tls=true", local.service_hosts[key]))}"
+    }, key, "")
+  }
+
+  # External IP address of the VM instance
+  server_ip = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip
+
+  # Map of SIP002 compliant Shadowsocks URIs for active services
+  shadowsocks_uris = {
+    for key, svc in local.active_services : key => "ss://${base64encode("${svc.method}:${local.active_passwords[key]}")}@${local.server_ip}:${svc.server_port}${local.v2ray_plugin_opts[key]}#${urlencode("${var.instance_name}-${key}")}"
+  }
 }
 
 # ==============================================================================
