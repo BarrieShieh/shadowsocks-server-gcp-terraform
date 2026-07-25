@@ -4,10 +4,10 @@
 
 # Google Cloud Platform provider for managing VPC, firewall, and Compute Engine resources
 provider "google" {
-  project     = var.gcp_project_id
-  region      = var.region
-  zone        = var.zone
-  credentials = var.gcp_sa_key
+  project = var.gcp_project_id
+  region  = var.region
+  zone    = var.zone
+  # credentials = var.gcp_sa_key
 }
 
 # Cloudflare provider for managing Zero Trust tunnels and DNS records
