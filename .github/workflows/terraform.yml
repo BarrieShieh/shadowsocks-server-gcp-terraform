@@ -1,5 +1,5 @@
 name: Deploy Shadowsocks
-run-name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.config }}]
+run-name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.instance }}]
 
 on:
   workflow_dispatch:
@@ -54,7 +54,7 @@ env:
 
 jobs:
   deploy:
-    name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.config }}]
+    name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.instance }}]
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
@@ -81,15 +81,15 @@ jobs:
       # Step 5: Execute Terraform Action with external .tfvars file
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
-        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars" -lock=false
+        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars" -lock=false
 
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
-        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
+        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars"
 
       - name: Terraform Destroy
         if: ${{ inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
+        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars"
 
           # Step 6: Export Terraform outputs after successful apply (including sensitive values)
       - name: Export Terraform Output
