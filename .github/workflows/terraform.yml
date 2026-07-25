@@ -32,7 +32,7 @@ on:
 
 env:
   # GCP Project ID mapped to Terraform input variable 'var.gcp_project_id'
-  TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+  TF_VAR_gcp_project_id: ${{ inputs.environment }}
 
   # GCP Service Account key mapped to Terraform input variable 'var.gcp_sa_key'
   TF_VAR_gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
@@ -47,7 +47,7 @@ env:
   TF_CLOUD_ORGANIZATION: ${{ inputs.tf_org }}
 
   # Terraform Cloud Workspace name
-  TF_WORKSPACE: ${{ vars.GCP_PROJECT_ID }}
+  TF_WORKSPACE: ${{ inputs.environment }}
 
 jobs:
   deploy:
