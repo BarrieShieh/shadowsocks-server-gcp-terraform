@@ -4,12 +4,21 @@ run-name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.config 
 on:
   workflow_dispatch:
     inputs:
+      tf_org:
+        description: "Choose Terraform Cloud Organization"
+        required: true
+        type: choice
+        options:
+          - "hcp_coding"
       action:
         description: "Choose Action"
         required: true
         default: "plan"
         type: choice
-        options: [ plan, apply, destroy ]
+        options:
+          - "plan"
+          - "apply"
+          - "destroy"
       environment:
         description: "Target Environment (maps to GitHub Environment for secrets/vars)"
         required: true
@@ -33,6 +42,9 @@ env:
 
   # API Token used by Terraform CLI to authenticate with Terraform Cloud (app.terraform.io)
   TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+
+  # Terraform Cloud Organization name
+  TF_CLOUD_ORGANIZATION: ${{ inputs.tf_org }}
 
   # Terraform Cloud Workspace name
   TF_WORKSPACE: ${{ vars.GCP_PROJECT_ID }}
