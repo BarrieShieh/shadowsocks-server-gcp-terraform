@@ -68,6 +68,7 @@ locals {
       ws   = try(svc.create_tunnel, false) ? "${svc.tunnel_subdomain}.${var.domain}" : "${var.subdomain}.${var.domain}"
       grpc = "${var.subdomain}.${var.domain}"
       quic = "${var.subdomain}.${var.domain}"
+      tls  = local.server_ip
     }, key, "")
   }
 
@@ -75,7 +76,7 @@ locals {
   v2ray_plugin_opts = {
     for key, svc in local.active_services : key => lookup({
       # Escapes slashes in the path string (e.g., /ws -> \/ws) for v2ray-plugin syntax
-      ws   = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;mux=true;path=%s;host=%s;mode=websocket;tls=true", replace(try(svc.path, ""), "/", "\\/"), local.service_hosts[key]))}"
+      ws   = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;mux=true;path=%s;host=%s;mode=websocket;tls=true", try(svc.path, ""), local.service_hosts[key]))}"
       grpc = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;host=%s;mode=grpc;tls=true", local.service_hosts[key]))}"
       quic = "/?plugin=${urlencode(format("v2ray-plugin;allowInsecure=true;host=%s;mode=quic;tls=true", local.service_hosts[key]))}"
     }, key, "")
@@ -86,7 +87,7 @@ locals {
 
   # Map of SIP002 compliant Shadowsocks URIs for active services
   shadowsocks_uris = {
-    for key, svc in local.active_services : key => "ss://${base64encode("${svc.method}:${local.active_passwords[key]}")}@${local.server_ip}:${svc.server_port}${local.v2ray_plugin_opts[key]}#${urlencode("${var.instance_name}-${key}")}"
+    for key, svc in local.active_services : key => "ss://${base64encode("${svc.method}:${local.active_passwords[key]}")}@${local.service_hosts[key]}:${svc.server_port}${local.v2ray_plugin_opts[key]}#${urlencode("${var.instance_name}-${key}")}"
   }
 }
 
