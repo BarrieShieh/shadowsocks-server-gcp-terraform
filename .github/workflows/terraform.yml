@@ -1,4 +1,6 @@
 name: Deploy Shadowsocks
+# 动态修改每次 Workflow 运行在 UI 上显示的名称
+run-name: ${{ inputs.action }} Shadowsocks - ${{ inputs.environment }} (${{ inputs.action }})
 
 on:
   workflow_dispatch:
@@ -35,6 +37,7 @@ env:
 
 jobs:
   deploy:
+    name: ${{ inputs.action }} (${{ inputs.environment }} - ${{ inputs.config }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
@@ -75,17 +78,8 @@ jobs:
       - name: Export Terraform Output
         if: ${{ inputs.action == 'apply' }}
         run: |
-          # 1. Export raw JSON format (terraform output -json natively includes sensitive values)
           terraform output -json > terraform_output.json
-          
-          # 2. Extract unredacted sensitive values into plain text format using jq
-          jq -r 'to_entries[] | "\(.key) = \(.value.value | if type == "object" or type == "array" then tojson else . end)"' terraform_output.json > terraform_output.txt
-          
-          # 3. Render outputs in the GitHub Job Summary view
-          echo "## Terraform Outputs" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat terraform_output.json >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          terraform output > terraform_output.txt
 
       # Step 7: Upload output artifacts for workflow download
       - name: Upload Output Artifact
