@@ -19,6 +19,11 @@ variable "zone" {
   default     = "us-west1-c"
 }
 
+variable "gcp_sa_key" {
+  type        = string
+  description = "The JSON key content of the GCP Service Account used for provider authentication."
+  sensitive   = true
+}
 # ==============================================================================
 # 2. DOMAIN, DNS & ACME SETTINGS
 # ==============================================================================
