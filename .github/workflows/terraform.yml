@@ -1,5 +1,5 @@
 name: Deploy Shadowsocks
-run-name: ${{ inputs.action }} (${{ inputs.environment }} - ${{ inputs.config }})
+run-name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.config }}]
 
 on:
   workflow_dispatch:
@@ -36,7 +36,7 @@ env:
 
 jobs:
   deploy:
-    name: ${{ inputs.action }} (${{ inputs.environment }} - ${{ inputs.config }})
+    name: ${{ inputs.action }} [${{ inputs.environment }}] - [${{ inputs.config }}]
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
