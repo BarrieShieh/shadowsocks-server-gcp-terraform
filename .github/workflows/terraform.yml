@@ -1,6 +1,5 @@
 name: Deploy Shadowsocks
-# 动态修改每次 Workflow 运行在 UI 上显示的名称
-run-name: ${{ inputs.action }} Shadowsocks - ${{ inputs.environment }} (${{ inputs.action }})
+run-name: ${{ inputs.action }} (${{ inputs.environment }} - ${{ inputs.config }})
 
 on:
   workflow_dispatch:
