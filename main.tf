@@ -191,7 +191,7 @@ resource "google_compute_instance" "app_vm" {
   }
 
   metadata = {
-    "compose-file-content" = terraform_data.compose_file.output
+    "compose-file-content" = sensitive(terraform_data.compose_file.output)
   }
 
   # Automated provisioning script: Installs Docker runtime and initializes services
