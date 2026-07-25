@@ -322,7 +322,7 @@ variable "machine_type" {
 variable "enable_deletion_protection" {
   description = "Prevents accidental destruction of the VM instance via Terraform or API requests"
   type        = bool
-  default     = true
+  default     = false
 }
 
 # ==============================================================================
