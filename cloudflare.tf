@@ -15,7 +15,7 @@ data "cloudflare_zone" "domain" {
 resource "cloudflare_zero_trust_tunnel_cloudflared" "tunnel" {
   for_each   = local.tunnel_services
   account_id = var.cloudflare_account_id
-  name       = each.key
+  name       = "${var.instance_name}-${each.key}"
   secret     = random_id.tunnel_secret[each.key].b64_std
 }
 
