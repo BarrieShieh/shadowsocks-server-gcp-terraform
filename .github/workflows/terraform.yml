@@ -36,7 +36,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}      # 3. 必须加上这行，下拉框选中的环境才能真正加载对应的 Secrets/Vars
+    environment: ${{ inputs.environment }}
     steps:
       # Step 1: Checkout primary Terraform codebase
       - name: Checkout Terraform Code
@@ -70,3 +70,28 @@ jobs:
       - name: Terraform Destroy
         if: ${{ inputs.action == 'destroy' }}
         run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
+
+      # Step 6: Export Terraform outputs after successful apply
+      - name: Export Terraform Output
+        if: ${{ inputs.action == 'apply' }}
+        run: |
+          # Save JSON and standard human-readable text output files
+          terraform output -json > terraform_output.json
+          terraform output > terraform_output.txt
+
+          # Render output directly in the GitHub Job Summary view
+          echo "## Terraform Outputs" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          terraform output -json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # Step 7: Upload output artifacts for workflow download
+      - name: Upload Output Artifact
+        if: ${{ inputs.action == 'apply' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-outputs-${{ inputs.environment }}-${{ inputs.config }}
+          path: |
+            terraform_output.json
+            terraform_output.txt
+          retention-days: 1
