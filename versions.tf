@@ -5,7 +5,11 @@
 terraform {
   # Enforce minimum required Terraform CLI version
   required_version = ">= 1.3.0"
-  cloud {}
+  cloud {
+    workspaces {
+      tags = ["statefile"]
+    }
+  }
   # Declare required provider plugins with source registries and version constraints
   required_providers {
     # Google Cloud Platform provider for managing cloud resources
