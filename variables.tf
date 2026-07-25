@@ -51,10 +51,13 @@ variable "email_address" {
   default     = ""
 }
 
+# "https://acme-v02.api.letsencrypt.org/directory" for production
+# "https://acme-staging-v02.api.letsencrypt.org/directory" for testing
+# Shadowsocks can use the staging server for testing to avoid hitting rate limits during development.
 variable "acme_server_url" {
   description = "The ACME directory URL for SSL/TLS certificate issuing"
   type        = string
-  default     = "https://acme-v02.api.letsencrypt.org/directory"
+  default     = "https://acme-staging-v02.api.letsencrypt.org/directory"
 }
 
 variable "acme_disable_complete_propagation" {
