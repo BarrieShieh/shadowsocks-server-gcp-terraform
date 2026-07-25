@@ -245,9 +245,18 @@ resource "google_compute_instance" "app_vm" {
 resource "local_sensitive_file" "passwords_json" {
   count = length(local.active_passwords) > 0 ? 1 : 0
 
-  filename        = "${path.module}/configs/passwords.json"
+  filename        = "${path.module}/configs/passwords.yaml"
   file_permission = "0600"
-  content         = jsonencode(local.active_passwords)
+  content         = yamlencode(local.active_passwords)
+}
+
+# Map of SIP002 compliant Shadowsocks connection URIs with optional v2ray-plugin query parameters
+resource "local_sensitive_file" "shadowsocks_uris" {
+  count = length(local.shadowsocks_uris) > 0 ? 1 : 0
+
+  filename        = "${path.module}/configs/shadowsocks_uris.yaml"
+  file_permission = "0600"
+  content         = yamlencode(local.shadowsocks_uris)
 }
 
 # Generate cryptographically secure random base64 passwords for active services
