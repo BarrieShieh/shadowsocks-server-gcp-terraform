@@ -67,7 +67,7 @@ locals {
     for key, svc in local.active_services : key => lookup({
       ws   = try(svc.create_tunnel, false) ? "${svc.tunnel_subdomain}.${var.domain}" : "${var.subdomain}.${var.domain}"
       grpc = "${var.subdomain}.${var.domain}"
-      quic = "${var.subdomain}.${var.domain}"
+      quic = local.server_ip
       tls  = local.server_ip
     }, key, "")
   }
