@@ -150,7 +150,7 @@ resource "google_compute_address" "vm_static_ip" {
 
 # Track rendered Docker Compose template state to trigger VM re-creation on updates
 resource "terraform_data" "compose_file" {
-  input = templatefile("${path.module}/docker-compose.yml.tftpl", {
+  input = sensitive(templatefile("${path.module}/docker-compose.yml.tftpl", {
     enable_cloudflare        = var.enable_cloudflare
     services                 = local.services
     domain                   = var.domain
@@ -159,7 +159,7 @@ resource "terraform_data" "compose_file" {
     cloudflare_tunnel_tokens = { for k, t in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => t.tunnel_token }
     acme_crt                 = local.acme_crt
     acme_key                 = local.acme_key
-  })
+  }))
 }
 
 resource "google_compute_instance" "app_vm" {
