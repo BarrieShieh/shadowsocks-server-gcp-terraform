@@ -63,7 +63,7 @@ jobs:
       # Step 5: Execute Terraform Action with external .tfvars file
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
-        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
+        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars" -lock=false
 
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
