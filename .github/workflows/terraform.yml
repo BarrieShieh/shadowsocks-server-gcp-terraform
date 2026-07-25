@@ -15,6 +15,10 @@ on:
         type: choice
         options:
           - "cloud-162606"
+      config:
+        description: "The name of config"
+        required: true
+        type: string
 
 env:
   TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
@@ -53,12 +57,12 @@ jobs:
       # Step 5: Execute Terraform Action with external .tfvars file
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
-        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
+        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
 
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
-        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
+        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
 
       - name: Terraform Destroy
         if: ${{ inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
+        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
