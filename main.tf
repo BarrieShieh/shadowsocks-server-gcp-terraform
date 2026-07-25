@@ -119,6 +119,7 @@ resource "google_compute_address" "vm_static_ip" {
 # Track rendered Docker Compose template state to trigger VM re-creation on updates
 resource "terraform_data" "compose_file" {
   input = templatefile("${path.module}/docker-compose.yml.tftpl", {
+    enable_cloudflare        = var.enable_cloudflare
     services                 = local.services
     domain                   = var.domain
     subdomain                = var.subdomain

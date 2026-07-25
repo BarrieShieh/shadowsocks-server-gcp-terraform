@@ -1,13 +1,12 @@
 locals {
-  # Filter active services where enabled is true AND key is NOT 'cloudflared' or 'caddy'
-  tunnel_services = {
+  tunnel_services = var.enable_cloudflare ? {
     for k, v in var.services : k => v if v.enabled && v.create_tunnel && !contains(["cloudflared", "caddy"], k)
-  }
+  } : {}
 }
 
-# Fetch Cloudflare zone data only when there is at least one active service
+# Fetch Cloudflare zone data only when Cloudflare is enabled and there is at least one active service
 data "cloudflare_zone" "domain" {
-  count      = length(local.tunnel_services) > 0 ? 1 : 0
+  count      = var.enable_cloudflare && length(local.tunnel_services) > 0 ? 1 : 0
   account_id = var.cloudflare_account_id
   name       = var.domain
 }
@@ -51,7 +50,7 @@ resource "cloudflare_record" "tunnel_dns_record" {
 }
 
 resource "cloudflare_record" "dns_record" {
-  count   = length(local.tunnel_services) > 0 ? 1 : 0
+  count   = var.enable_cloudflare && length(local.tunnel_services) > 0 ? 1 : 0
   zone_id = data.cloudflare_zone.domain[0].id
   name    = var.subdomain
   content = google_compute_instance.app_vm.network_interface[0].access_config[0].nat_ip

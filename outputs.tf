@@ -18,13 +18,13 @@ output "vm_external_ip" {
 # Map of Cloudflare Zero Trust Tunnel authentication tokens
 output "cloudflare_tunnel_tokens" {
   description = "Map of Cloudflare Zero Trust tunnel authentication tokens, keyed by service."
-  value       = { for k, v in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => v.tunnel_token }
   sensitive   = true
+  value       = var.enable_cloudflare ? { for k, v in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => v.tunnel_token } : {}
 }
 
 # Full TLS certificate chain combining server and issuer PEMs
 output "fullchain_pem" {
   description = "Full-chain TLS certificate PEM containing both the server and intermediate issuer certificates."
-  value       = "${acme_certificate.cert.certificate_pem}${acme_certificate.cert.issuer_pem}"
   sensitive   = true
+  value       = var.enable_cloudflare ? "${acme_certificate.cert[0].certificate_pem}${acme_certificate.cert[0].issuer_pem}" : null
 }

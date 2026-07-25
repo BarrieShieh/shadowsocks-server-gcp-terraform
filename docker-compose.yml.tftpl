@@ -1,5 +1,5 @@
 services:
-%{ if try(services["caddy"].enabled, false) }
+%{ if enable_cloudflare && try(services["caddy"].enabled, false) }
   # Caddy service (v2)
   caddy:
     container_name: caddy
@@ -23,7 +23,7 @@ services:
         target: /caddy.key
 %{ endif }
 
-%{ if try(services["ws"].enabled, false) }
+%{ if enable_cloudflare && try(services["ws"].enabled, false) }
   # Shadowsocks V2Ray WebSocket service
   ws:
     container_name: ws
@@ -34,7 +34,7 @@ services:
         target: /etc/shadowsocks-rust/config.json
 %{ endif }
 
-%{ if try(services["quic"].enabled, false) }
+%{ if enable_cloudflare && try(services["quic"].enabled, false) }
   # Shadowsocks V2Ray QUIC service
   quic:
     container_name: quic
@@ -52,7 +52,7 @@ services:
         target: /private.key
 %{ endif }
 
-%{ if try(services["grpc"].enabled, false) }
+%{ if enable_cloudflare && try(services["grpc"].enabled, false) }
   # Shadowsocks V2Ray gRPC service
   grpc:
     container_name: grpc
@@ -84,7 +84,7 @@ services:
         target: /etc/shadowsocks-rust/config.json
 %{ endif }
 
-%{ if try(services["cloudflared"].enabled, false) }
+%{ if enable_cloudflare && try(services["cloudflared"].enabled, false) }
 %{ for k, token in cloudflare_tunnel_tokens ~}
   # Cloudflare Tunnel service for ${k}
   cloudflared-${k}:
@@ -98,13 +98,15 @@ services:
 %{ endif }
 
 configs:
+%{ if enable_cloudflare }
   # Shared SSL Certificate files for QUIC, gRPC and Caddy endpoints
   acme-crt:
     content: ${jsonencode(acme_crt)}
   acme-key:
     content: ${jsonencode(acme_key)}
+%{ endif }
 
-%{ if try(services["caddy"].enabled, false) }
+%{ if enable_cloudflare && try(services["caddy"].enabled, false) }
   # Caddy v2 Caddyfile configuration
   caddy-config:
     content: |
@@ -135,7 +137,7 @@ configs:
       #%{ endif }
 %{ endif }
 
-%{ if try(services["ws"].enabled, false) }
+%{ if enable_cloudflare && try(services["ws"].enabled, false) }
   # Config for WebSocket mode
   ws-config:
     content: |
@@ -151,7 +153,7 @@ configs:
       }
 %{ endif }
 
-%{ if try(services["quic"].enabled, false) }
+%{ if enable_cloudflare && try(services["quic"].enabled, false) }
   # Config for QUIC mode
   quic-config:
     content: |
@@ -162,11 +164,11 @@ configs:
           "password":"${services["quic"].password}",
           "nameserver":"8.8.8.8",
           "plugin":"v2ray-plugin",
-          "plugin_opts":"server;mode=quic;host=${subdomain}.${domain}};cert=/fullchain.crt;key=/private.key"
+          "plugin_opts":"server;mode=quic;host=${subdomain}.${domain};cert=/fullchain.crt;key=/private.key"
       }
 %{ endif }
 
-%{ if try(services["grpc"].enabled, false) }
+%{ if enable_cloudflare && try(services["grpc"].enabled, false) }
   # Config for gRPC mode
   grpc-config:
     content: |

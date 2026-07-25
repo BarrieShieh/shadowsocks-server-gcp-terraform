@@ -27,6 +27,11 @@ variable "gcp_sa_key" {
 # ==============================================================================
 # 2. DOMAIN, DNS & ACME SETTINGS
 # ==============================================================================
+variable "enable_cloudflare" {
+  type        = bool
+  description = "Flag to enable or disable Cloudflare integration for DNS and Zero Trust tunnels"
+  default     = true
+}
 
 variable "domain" {
   description = "Primary domain name managed via Cloudflare"
