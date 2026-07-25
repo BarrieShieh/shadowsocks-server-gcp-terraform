@@ -71,18 +71,20 @@ jobs:
         if: ${{ inputs.action == 'destroy' }}
         run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.config }}.tfvars"
 
-      # Step 6: Export Terraform outputs after successful apply
+          # Step 6: Export Terraform outputs after successful apply (including sensitive values)
       - name: Export Terraform Output
         if: ${{ inputs.action == 'apply' }}
         run: |
-          # Save JSON and standard human-readable text output files
+          # 1. Export raw JSON format (terraform output -json natively includes sensitive values)
           terraform output -json > terraform_output.json
-          terraform output > terraform_output.txt
-
-          # Render output directly in the GitHub Job Summary view
+          
+          # 2. Extract unredacted sensitive values into plain text format using jq
+          jq -r 'to_entries[] | "\(.key) = \(.value.value | if type == "object" or type == "array" then tojson else . end)"' terraform_output.json > terraform_output.txt
+          
+          # 3. Render outputs in the GitHub Job Summary view
           echo "## Terraform Outputs" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          terraform output -json >> $GITHUB_STEP_SUMMARY
+          cat terraform_output.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       # Step 7: Upload output artifacts for workflow download
