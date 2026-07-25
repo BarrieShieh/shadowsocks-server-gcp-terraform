@@ -32,24 +32,24 @@ resource "acme_certificate" "cert" {
 # Export generated certificates to local files
 resource "local_file" "certificate_pem" {
   count    = var.enable_cloudflare ? 1 : 0
-  content  = acme_certificate.cert[0].certificate_pem
+  content  = sensitive(acme_certificate.cert[0].certificate_pem)
   filename = "${path.module}/certs/certificate.crt"
 }
 
 resource "local_file" "private_key_pem" {
   count    = var.enable_cloudflare ? 1 : 0
-  content  = acme_certificate.cert[0].private_key_pem
+  content  = sensitive(acme_certificate.cert[0].private_key_pem)
   filename = "${path.module}/certs/private.key"
 }
 
 resource "local_file" "issuer_pem" {
   count    = var.enable_cloudflare ? 1 : 0
-  content  = acme_certificate.cert[0].issuer_pem
+  content  = sensitive(acme_certificate.cert[0].issuer_pem)
   filename = "${path.module}/certs/chain.crt"
 }
 
 resource "local_file" "fullchain_pem" {
   count    = var.enable_cloudflare ? 1 : 0
-  content  = "${acme_certificate.cert[0].certificate_pem}${acme_certificate.cert[0].issuer_pem}"
+  content  = sensitive("${acme_certificate.cert[0].certificate_pem}${acme_certificate.cert[0].issuer_pem}")
   filename = "${path.module}/certs/fullchain.crt"
 }

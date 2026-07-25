@@ -247,7 +247,7 @@ resource "local_sensitive_file" "passwords_json" {
 
   filename        = "${path.module}/configs/passwords.yaml"
   file_permission = "0600"
-  content         = yamlencode(local.active_passwords)
+  content         = sensitive(yamlencode(local.active_passwords))
 }
 
 # Map of SIP002 compliant Shadowsocks connection URIs with optional v2ray-plugin query parameters
@@ -256,7 +256,7 @@ resource "local_sensitive_file" "shadowsocks_uris" {
 
   filename        = "${path.module}/configs/shadowsocks_uris.yaml"
   file_permission = "0600"
-  content         = yamlencode(local.shadowsocks_uris)
+  content         = sensitive(yamlencode(local.shadowsocks_uris))
 }
 
 # Generate cryptographically secure random base64 passwords for active services
