@@ -9,6 +9,12 @@ on:
         default: "plan"
         type: choice
         options: [ plan, apply, destroy ]
+      environment:
+        description: "Target Environment (maps to GitHub Environment for secrets/vars)"
+        required: true
+        type: choice
+        options:
+          - "cloud-162606"
 
 env:
   TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
@@ -22,32 +28,37 @@ env:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}      # 3. 必须加上这行，下拉框选中的环境才能真正加载对应的 Secrets/Vars
     steps:
-      - name: Checkout Code
+      # Step 1: Checkout primary Terraform codebase
+      - name: Checkout Terraform Code
         uses: actions/checkout@v4
 
+      # Step 2: Checkout private repository containing .tfvars files under the same GitHub account
+      - name: Checkout Configs/tfvars Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "${{ github.repository_owner }}/shadowsocks-server-gcp-configurations"
+          token: ${{ secrets.PAT_WITH_REPO_SCOPE }}
+          path: "tfvars-config"
+
+      # Step 3: Setup Terraform CLI
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      # Step 4: Initialize Terraform working directory
       - name: Terraform Init
         run: terraform init
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
+      # Step 5: Execute Terraform Action with external .tfvars file
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
-        run: terraform plan
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
 
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
-        run: terraform apply -auto-approve
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
 
       - name: Terraform Destroy
         if: ${{ inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/terraform.tfvars"
