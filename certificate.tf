@@ -18,7 +18,7 @@ resource "acme_certificate" "cert" {
   account_key_pem           = acme_registration.reg[0].account_key_pem
   common_name               = var.domain
   subject_alternative_names = ["*.${var.domain}"]
-
+  # recursive_nameservers     = ["8.8.8.8:53"]
   dns_challenge {
     provider = "cloudflare"
 
