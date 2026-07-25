@@ -33,5 +33,5 @@ output "fullchain_pem" {
 output "shadowsocks_uris" {
   description = "Map of SIP002 compliant Shadowsocks URIs for active services, keyed by service name."
   sensitive   = true
-  value = local.shadowsocks_uris
+  value       = local.shadowsocks_uris
 }
