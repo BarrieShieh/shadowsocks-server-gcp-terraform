@@ -57,6 +57,12 @@ variable "acme_server_url" {
   default     = "https://acme-v02.api.letsencrypt.org/directory"
 }
 
+variable "acme_disable_complete_propagation" {
+  description = "When true, disables the local DNS propagation pre-check for ACME DNS-01 challenges"
+  type        = bool
+  default     = false
+}
+
 # ==============================================================================
 # 3. CLOUDFLARE & EXTERNAL CREDENTIALS
 # ==============================================================================

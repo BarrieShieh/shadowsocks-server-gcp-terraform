@@ -18,7 +18,8 @@ resource "acme_certificate" "cert" {
   account_key_pem           = acme_registration.reg[0].account_key_pem
   common_name               = var.domain
   subject_alternative_names = ["*.${var.domain}"]
-  # recursive_nameservers     = ["8.8.8.8:53"]
+  # Disable local DNS propagation pre-check
+  disable_complete_propagation = var.acme_disable_complete_propagation
   dns_challenge {
     provider = "cloudflare"
 
