@@ -36,19 +36,19 @@ variable "enable_cloudflare" {
 variable "domain" {
   description = "Primary domain name managed via Cloudflare"
   type        = string
-  default     = null
+  default     = ""
 }
 
 variable "subdomain" {
   description = "subdomain to associate with DNS A records pointing to the VM"
   type        = string
-  default     = null
+  default     = ""
 }
 
 variable "email_address" {
   description = "Email address for ACME/Let's Encrypt registration and certificate expiration notices"
   type        = string
-  default     = null
+  default     = ""
 }
 
 variable "acme_server_url" {

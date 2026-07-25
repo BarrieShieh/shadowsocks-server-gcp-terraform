@@ -64,11 +64,11 @@ locals {
   # Map of calculated FQDN hostnames for active services
   # Safely handles null values for var.subdomain and var.domain
   service_hosts = {
-    for key, svc in local.active_services : key => (
-      key == "ws" && try(svc.create_tunnel, false) && try(svc.tunnel_subdomain, "") != ""
-      ? try("${svc.tunnel_subdomain}.${var.domain}", "")
-      : (var.subdomain != null && var.domain != null ? "${var.subdomain}.${var.domain}" : "")
-    )
+    for key, svc in local.active_services : key => lookup({
+      ws   = try(svc.create_tunnel, false) ? "${svc.tunnel_subdomain}.${var.domain}" : "${var.subdomain}.${var.domain}"
+      grpc = "${var.subdomain}.${var.domain}"
+      quic = "${var.subdomain}.${var.domain}"
+    }, key, "")
   }
 
   # Map of formatted v2ray-plugin query parameters for active services

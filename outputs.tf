@@ -32,6 +32,6 @@ output "fullchain_pem" {
 # Map of SIP002 compliant Shadowsocks connection URIs with optional v2ray-plugin query parameters
 output "shadowsocks_uris" {
   description = "Map of SIP002 compliant Shadowsocks URIs for active services, keyed by service name."
-  sensitive   = true
-  value       = local.shadowsocks_uris
+  # sensitive   = true
+  value = local.shadowsocks_uris
 }
