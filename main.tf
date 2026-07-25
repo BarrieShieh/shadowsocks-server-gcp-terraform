@@ -4,8 +4,8 @@
 
 locals {
   # Concatenate certificate authority and server certificate PEMs for TLS handshakes
-  acme_crt = "${acme_certificate.cert.certificate_pem}${acme_certificate.cert.issuer_pem}"
-  acme_key = acme_certificate.cert.private_key_pem
+  acme_crt = var.enable_cloudflare ? "${acme_certificate.cert[0].certificate_pem}${acme_certificate.cert[0].issuer_pem}" : null
+  acme_key = var.enable_cloudflare ? acme_certificate.cert[0].private_key_pem : null
 
   # Merge service configurations with randomly generated passwords
   services = {

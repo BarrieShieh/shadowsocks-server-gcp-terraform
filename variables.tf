@@ -36,16 +36,19 @@ variable "enable_cloudflare" {
 variable "domain" {
   description = "Primary domain name managed via Cloudflare"
   type        = string
+  default     = null
 }
 
 variable "subdomain" {
   description = "subdomain to associate with DNS A records pointing to the VM"
   type        = string
+  default     = null
 }
 
 variable "email_address" {
   description = "Email address for ACME/Let's Encrypt registration and certificate expiration notices"
   type        = string
+  default     = null
 }
 
 variable "acme_server_url" {
@@ -61,12 +64,14 @@ variable "acme_server_url" {
 variable "cloudflare_account_id" {
   description = "Cloudflare Account ID associated with the target domain"
   type        = string
+  default     = "cloudflare_account_id"
 }
 
 variable "cloudflare_api_token" {
   description = "Cloudflare API Token granted with DNS management and Cloudflare Tunnel permissions"
   type        = string
   sensitive   = true
+  default     = "0123456789abcdef0123456789abcdef01234567"
 }
 
 # ==============================================================================
