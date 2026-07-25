@@ -20,7 +20,7 @@ on:
           - "apply"
           - "destroy"
       environment:
-        description: "Target Environment (maps to GitHub Environment for secrets/vars)"
+        description: "Target Environment (Google Cloud Project ID)"
         required: true
         type: choice
         options:
