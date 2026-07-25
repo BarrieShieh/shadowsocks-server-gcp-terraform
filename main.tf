@@ -69,11 +69,6 @@ resource "google_compute_network" "app_vpc" {
   auto_create_subnetworks = var.auto_create_subnetworks
 }
 
-# Fetch official Google Cloud health check IP blocks for load balancing
-data "google_netblock_ip_ranges" "health_checkers" {
-  range_type = "health-checkers"
-}
-
 # Dynamic ingress/egress firewall rules derived from merged local.firewall_rules map
 resource "google_compute_firewall" "rules" {
   for_each = local.firewall_rules
