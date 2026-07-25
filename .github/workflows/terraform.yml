@@ -34,11 +34,8 @@ env:
   # API Token used by Terraform CLI to authenticate with Terraform Cloud (app.terraform.io)
   TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
-  # Terraform Cloud Organization and Workspace names
-  TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
-
   # Terraform Cloud Workspace name
-  TF_CLOUD_WORKSPACE: ${{ vars.TF_CLOUD_WORKSPACE }}
+  TF_WORKSPACE: ${{ vars.TF_WORKSPACE }}
 
 jobs:
   deploy:
