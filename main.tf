@@ -254,3 +254,35 @@ resource "random_id" "ss_passwords" {
 
   byte_length = 32
 }
+
+# Store active service passwords map in GCP Secret Manager
+resource "google_secret_manager_secret" "passwords" {
+  count     = length(local.active_passwords) > 0 ? 1 : 0
+  secret_id = "${var.instance_name}-passwords"
+
+  replication {
+    auto {} # Supported in google provider v5.0+; use automatic = true for older versions
+  }
+}
+
+resource "google_secret_manager_secret_version" "passwords_version" {
+  count       = length(local.active_passwords) > 0 ? 1 : 0
+  secret      = google_secret_manager_secret.passwords[0].id
+  secret_data = sensitive(yamlencode(local.active_passwords))
+}
+
+# Store formatted Shadowsocks connection URIs in GCP Secret Manager
+resource "google_secret_manager_secret" "shadowsocks_uris" {
+  count     = length(local.shadowsocks_uris) > 0 ? 1 : 0
+  secret_id = "${var.instance_name}-shadowsocks-uris"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "shadowsocks_uris_version" {
+  count       = length(local.shadowsocks_uris) > 0 ? 1 : 0
+  secret      = google_secret_manager_secret.shadowsocks_uris[0].id
+  secret_data = sensitive(yamlencode(local.shadowsocks_uris))
+}

@@ -124,14 +124,3 @@ jobs:
           echo '```text' >> $GITHUB_STEP_SUMMARY
           cat terraform_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      # Step 12: Upload generated output files as downloadable workflow artifacts
-      - name: Upload Output Artifact
-        if: ${{ inputs.action == 'apply' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: tf-outputs-${{ inputs.environment }}-${{ inputs.instance }}-${{ github.run_id }}
-          path: |
-            terraform_output.json
-            terraform_output.txt
-          retention-days: 1
