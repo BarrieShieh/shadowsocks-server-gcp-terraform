@@ -87,7 +87,7 @@ locals {
 
   # Map of SIP002 compliant Shadowsocks URIs for active services
   shadowsocks_uris = {
-    for key, svc in local.active_services : key => "ss://${base64encode("${svc.method}:${local.active_passwords[key]}")}@${local.service_hosts[key]}:${svc.server_port}${local.v2ray_plugin_opts[key]}#${urlencode("${var.instance_name}-${key}")}"
+    for key, svc in local.active_services : key => "ss://${base64encode("${svc.method}:${local.active_passwords[key]}")}@${local.service_hosts[key]}:${svc.server_port}${local.v2ray_plugin_opts[key]}#${urlencode("${var.gcp_project_id}-}${var.instance_name}-${key}")}"
   }
 }
 
