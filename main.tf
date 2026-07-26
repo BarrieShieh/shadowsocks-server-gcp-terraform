@@ -14,12 +14,18 @@ locals {
     })
   }
 
-  # Filter out non-target proxy services requiring password generation
-  # Excludes cloudflared/caddy, as well as ws/quic/grpc when Cloudflare is disabled
+  # Non-proxy infrastructure services excluded from password/URI generation
+  infra_services = ["cloudflared", "caddy"]
+
+  # Proxy protocols that strictly depend on Cloudflare integration
+  cf_dependent_services = ["ws", "quic", "grpc"]
+
+  # Filter target active proxy services requiring credential generation
   active_services = {
-    for k, v in var.services : k => v if v.enabled &&
-    !contains(["cloudflared", "caddy"], k) &&
-    (var.enable_cloudflare || !contains(["ws", "quic", "grpc"], k))
+    for key, service in var.services : key => service
+    if service.enabled
+    && !contains(local.infra_services, key)
+    && (var.enable_cloudflare ? true : !contains(local.cf_dependent_services, key))
   }
 
   # Map generated base64 passwords by service key
