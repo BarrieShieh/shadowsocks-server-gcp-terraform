@@ -1,6 +1,6 @@
 locals {
   tunnel_services = var.enable_cloudflare ? {
-    for k, v in var.services : k => v if v.enabled && v.create_tunnel && !contains(["cloudflared", "caddy"], k)
+    for k, v in var.services : k => v if v.enabled && v.create_tunnel && !contains(local.infra_services, k)
   } : {}
 }
 
