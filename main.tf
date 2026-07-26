@@ -148,20 +148,6 @@ resource "google_compute_address" "vm_static_ip" {
 # 3. COMPUTE ENGINE WORKLOAD
 # ==============================================================================
 
-# Track rendered Docker Compose template state to trigger VM re-creation on updates
-resource "terraform_data" "compose_file" {
-  input = sensitive(templatefile("${path.module}/docker-compose.yml.tftpl", {
-    enable_cloudflare        = var.enable_cloudflare
-    services                 = local.services
-    domain                   = var.domain
-    subdomain                = var.subdomain
-    ss_version               = var.ss_version
-    cloudflare_tunnel_tokens = { for k, t in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => t.tunnel_token }
-    acme_crt                 = local.acme_crt
-    acme_key                 = local.acme_key
-  }))
-}
-
 resource "google_compute_instance" "app_vm" {
   name                      = var.instance_name
   machine_type              = var.machine_type
@@ -190,8 +176,18 @@ resource "google_compute_instance" "app_vm" {
     }
   }
 
+  # Render Compose file template directly into instance metadata
   metadata = {
-    "compose-file-content" = sensitive(terraform_data.compose_file.output)
+    "compose-file-content" = sensitive(templatefile("${path.module}/docker-compose.yml.tftpl", {
+      enable_cloudflare        = var.enable_cloudflare
+      services                 = local.services
+      domain                   = var.domain
+      subdomain                = var.subdomain
+      ss_version               = var.ss_version
+      cloudflare_tunnel_tokens = { for k, t in cloudflare_zero_trust_tunnel_cloudflared.tunnel : k => t.tunnel_token }
+      acme_crt                 = local.acme_crt
+      acme_key                 = local.acme_key
+    }))
   }
 
   # Automated provisioning script: Installs Docker runtime and initializes services
@@ -228,13 +224,6 @@ resource "google_compute_instance" "app_vm" {
 
     docker compose up -d
   EOF
-
-  # Force replacement of the VM when the rendered compose configuration changes
-  lifecycle {
-    replace_triggered_by = [
-      terraform_data.compose_file
-    ]
-  }
 }
 
 # ==============================================================================
