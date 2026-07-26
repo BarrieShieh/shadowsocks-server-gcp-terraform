@@ -266,8 +266,8 @@ resource "google_secret_manager_secret" "credentials" {
 }
 
 resource "google_secret_manager_secret_version" "credentials_version" {
-  count       = length(local.active_passwords) > 0 ? 1 : 0
-  secret      = google_secret_manager_secret.credentials[0].id
+  count  = length(local.active_passwords) > 0 ? 1 : 0
+  secret = google_secret_manager_secret.credentials[0].id
   secret_data = sensitive(yamlencode({
     passwords = local.active_passwords
     uris      = local.shadowsocks_uris
