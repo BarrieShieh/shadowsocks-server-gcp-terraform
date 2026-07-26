@@ -31,25 +31,25 @@ on:
         type: string
 
 env:
-  # GCP Project ID mapped to Terraform input variable 'var.gcp_project_id'
+  # Pass GCP Project ID to Terraform input variable 'var.gcp_project_id'
   TF_VAR_gcp_project_id: ${{ inputs.environment }}
 
-  # GCP Service Account key mapped to Terraform input variable 'var.gcp_sa_key'
+  # Pass GCP Service Account key to Terraform input variable 'var.gcp_sa_key'
   TF_VAR_gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
 
-  # Cloudflare API Token mapped to Terraform input variable 'var.cloudflare_api_token'
+  # Pass Cloudflare API Token to Terraform input variable 'var.cloudflare_api_token'
   TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-  # API Token used by Terraform CLI to authenticate with Terraform Cloud (app.terraform.io)
+  # Authenticate Terraform CLI with Terraform Cloud (app.terraform.io)
   TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
-  # Terraform Cloud Organization name
+  # Set target Terraform Cloud Organization
   TF_CLOUD_ORGANIZATION: ${{ inputs.tf_org }}
 
-  # Terraform Cloud Workspace name
+  # Set target Terraform Cloud Workspace
   TF_WORKSPACE: ${{ inputs.environment }}
 
-  # Terraform input variable 'var.instance_name' mapped to the GitHub Action input 'instance'
+  # Pass target Compute Engine VM instance name to Terraform variable 'var.instance_name'
   TF_VAR_instance_name: ${{ inputs.instance }}
 
 jobs:
@@ -58,11 +58,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      # Step 1: Checkout primary Terraform codebase
+      # Step 1: Checkout the primary Terraform codebase
       - name: Checkout Terraform Code
         uses: actions/checkout@v4
 
-      # Step 2: Checkout private repository containing .tfvars files under the same GitHub account
+      # Step 2: Checkout private configuration repository containing instance-specific .tfvars files
       - name: Checkout Configs/tfvars Repository
         uses: actions/checkout@v4
         with:
@@ -70,28 +70,49 @@ jobs:
           token: ${{ secrets.PAT }}
           path: "tfvars-config"
 
-      # Step 3: Setup Terraform CLI
+      # Step 3: Install and configure Terraform CLI
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Step 4: Initialize Terraform working directory
+      # Step 4: Initialize backend and providers
       - name: Terraform Init
         run: terraform init
 
-      # Step 5: Execute Terraform Action with external .tfvars file
+      # Step 5: Generate plan file for plan and apply workflows
       - name: Terraform Plan
-        if: ${{ inputs.action == 'plan' }}
-        run: terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars" -lock=false
+        if: ${{ inputs.action == 'plan' || inputs.action == 'apply' }}
+        run: |
+          terraform plan -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars" -out=tfplan
+          terraform show -json tfplan > tfplan.json
 
+      # Step 6: Generate destroy plan file for teardown workflows
+      - name: Terraform Plan (Destroy)
+        if: ${{ inputs.action == 'destroy' }}
+        run: |
+          terraform plan -destroy -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars" -out=tfplan
+          terraform show -json tfplan > tfplan.json
+
+      # Step 7: Install tf-summarize tool to parse JSON plan output
+      - name: Setup tf-summarize
+        uses: dineshba/tf-summarize-action@v1
+
+      # Step 8: Render Markdown summary of proposed infrastructure changes to GitHub Job Summary
+      - name: Summarize Plan
+        run: |
+          echo "## 📊 Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
+          tf-summarize -md tfplan.json >> $GITHUB_STEP_SUMMARY
+
+      # Step 9: Execute Terraform apply using the saved execution plan
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
-        run: terraform apply -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars"
+        run: terraform apply tfplan
 
+      # Step 10: Execute Terraform destroy using the saved execution plan
       - name: Terraform Destroy
         if: ${{ inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve -var-file="tfvars-config/deployments/${{ inputs.environment }}/${{ inputs.instance }}.tfvars"
+        run: terraform apply tfplan
 
-          # Step 6: Export Terraform outputs after successful apply (including sensitive values)
+      # Step 11: Export Terraform outputs to file artifacts and append text summary to Job Summary
       - name: Export Terraform Output
         if: ${{ inputs.action == 'apply' }}
         run: |
@@ -104,12 +125,12 @@ jobs:
           cat terraform_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      # Step 7: Upload output artifacts for workflow download
+      # Step 12: Upload generated output files as downloadable workflow artifacts
       - name: Upload Output Artifact
         if: ${{ inputs.action == 'apply' }}
         uses: actions/upload-artifact@v4
         with:
-          name: tf-outputs-${{ inputs.environment }}-${{ inputs.config }}-${{ github.run_id }}
+          name: tf-outputs-${{ inputs.environment }}-${{ inputs.instance }}-${{ github.run_id }}
           path: |
             terraform_output.json
             terraform_output.txt
