@@ -120,7 +120,7 @@ jobs:
           terraform output > terraform_output.txt
           
           # Render outputs directly in the GitHub Job Summary view
-          echo "## Terraform Outputs" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Terraform Outputs" >> $GITHUB_STEP_SUMMARY
           echo '```text' >> $GITHUB_STEP_SUMMARY
           cat terraform_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
